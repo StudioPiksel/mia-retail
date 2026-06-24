@@ -1,65 +1,297 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import SiteLayout from "@/components/layout/SiteLayout";
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "MIA Retail Solutions — Partner za opremanje maloprodajnih i HoReCa objekata",
+  description: "Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora na ključ. 200+ projekata na 3 kontinenta.",
+};
+
+export default async function HomePage() {
+  const blogPosts = await prisma.blogPost.findMany({
+    where: { published: true },
+    orderBy: { publishedAt: "desc" },
+    take: 3,
+    select: { slug: true, title: true, excerpt: true, category: true, thumbnail: true, publishedAt: true },
+  });
+
+  const heroSlides = ["puglia-inox-1.jpg","puglia-inox-2.jpg","puglia-inox-3.jpg","esthederm.jpg","MINIEKOCOLORE.Leclerc2.jpg","ICASupermarketPelikan.jpg","PoppyBudapest2.jpg","1764661906919.jpg","ConadItaly1.jpg"];
+  const clients = [
+    {src:"/assets/images/clients/Logo-Lidl.webp",alt:"Lidl"},{src:"/assets/images/clients/IKEA-Logo-400x225.webp",alt:"IKEA"},{src:"/assets/images/clients/carrefour-logo-385x300.webp",alt:"Carrefour"},{src:"/assets/images/clients/Logo-Spar.webp",alt:"SPAR"},{src:"/assets/images/clients/Logo-Konzum-400x84.webp",alt:"Konzum"},{src:"/assets/images/clients/aldi-logo.webp",alt:"Aldi"},{src:"/assets/images/clients/Logo-Coop-400x159.webp",alt:"Coop"},{src:"/assets/images/clients/Logo-Knauf-400x83.webp",alt:"Kaufland"},{src:"/assets/images/clients/nestle-4-logo-png-transparent-300x300.webp",alt:"Nestlé"},{src:"/assets/images/clients/Logo-Loreal.webp",alt:"L'Oréal"},{src:"/assets/images/clients/InterContinentalLogo.svg-400x155.webp",alt:"InterContinental"},{src:"/assets/images/clients/Magyar_Telekom-Logo.wine_-400x267.webp",alt:"Magyar Telekom"},
+  ];
+  const designItems = [
+    {src:"/assets/images/design/dzyuba/Foxi_supermarket.webp",caption:"Foxi supermarket"},{src:"/assets/images/design/witt/Aroma_marketi.jpg",caption:"Aroma marketi"},{src:"/assets/images/design/dzyuba/Agrohub_Tbilisi.webp",caption:"Agrohub · Tbilisi"},{src:"/assets/images/design/witt/Mesara_Plana.jpg",caption:"Mesara Plana"},{src:"/assets/images/design/dzyuba/Galmart_Uzbekistan.webp",caption:"Galmart · Uzbekistan"},{src:"/assets/images/design/witt/Restoran_Flamingo.jpg",caption:"Restoran Flamingo"},{src:"/assets/images/design/dzyuba/Vinoteca.webp",caption:"Vinoteca"},{src:"/assets/images/design/witt/Kafe_Soljica_projektovanje.jpg",caption:"Kafe Šoljica"},{src:"/assets/images/design/dzyuba/Magnum_Ukraine.webp",caption:"Magnum · Ukrajina"},{src:"/assets/images/design/witt/Restoran_Vojvode_Stepe.jpg",caption:"Restoran Vojvode Stepe"},{src:"/assets/images/design/dzyuba/Smako_market.webp",caption:"Smako market"},{src:"/assets/images/design/witt/Aroma_marketi_2.jpg",caption:"Aroma marketi"},{src:"/assets/images/design/dzyuba/Selecto.webp",caption:"Selecto"},{src:"/assets/images/design/dzyuba/Ultramarket.webp",caption:"Ultramarket"},
+  ];
+  const suppliers = [
+    {src:"/assets/images/partners/ITAB.jpg",name:"ITAB"},{src:"/assets/images/partners/HLLogotype100CMYKWhiteBlueBackground.jpg",name:"HL Display"},{src:"/assets/images/partners/Rabtrolley.png",name:"Rabtrolley"},{src:"/assets/images/partners/GOST.png",name:"Go-St"},{src:"/assets/images/partners/WISECOOLING.webp",name:"Wise Cooling"},{src:"/assets/images/partners/Plastimark.webp",name:"Plastimark"},{src:"/assets/images/partners/d&k-logo(1).png",name:"DK Technology"},{src:"/assets/images/partners/IdeamInox_PugliaInox_logo-1(1).png",name:"Ideam Inox"},{src:"/assets/images/partners/Promming.png",name:"Promming"},{src:"/assets/images/partners/damix_logo(2).jpg",name:"Damix"},
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <SiteLayout>
+      {/* HERO */}
+      <section className="hero" id="hero">
+        <div className="hero-slideshow">
+          {heroSlides.map((slide, i) => (
+            <div key={slide} className={`hero-slide${i === 0 ? " active" : ""}`} style={{ backgroundImage: `url('/assets/images/hero/${slide}')` }} />
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="hero-overlay"></div>
+        <div className="hero-container">
+          <div className="hero-content">
+            <p className="hero-eyebrow">Partner za opremanje na ključ</p>
+            <h1 className="hero-title">Vaš objekat, spreman <span className="highlight">na dan otvaranja</span></h1>
+            <p className="hero-subtitle">Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora. Radimo s lancima koji ne trpe kašnjenje — Lidl, IKEA, Carrefour, SPAR.</p>
+            <div className="hero-stats">
+              <div className="stat"><span className="stat-number">200+</span><span className="stat-label">Realizovanih projekata</span></div>
+              <div className="stat"><span className="stat-number">3</span><span className="stat-label">Kontinenta</span></div>
+              <div className="stat"><span className="stat-number">15+</span><span className="stat-label">Godina iskustva</span></div>
+            </div>
+          </div>
+          <div className="hero-form-wrapper">
+            <div className="hero-form-card">
+              <div className="form-header">
+                <span className="form-badge">Besplatna procjena</span>
+                <h3>Brza konsultacija</h3>
+                <p>Opišite projekat — javljamo se za 24h</p>
+              </div>
+              <form className="hero-form" id="heroForm">
+                <div className="form-group"><label htmlFor="name">Ime i prezime</label><input type="text" id="name" name="name" required /></div>
+                <div className="form-group"><label htmlFor="company">Naziv firme</label><input type="text" id="company" name="company" /></div>
+                <div className="form-group"><label htmlFor="email">Email adresa</label><input type="email" id="email" name="email" required /></div>
+                <div className="form-group">
+                  <label htmlFor="object-type">Tip objekta</label>
+                  <select id="object-type" name="object-type">
+                    <option value="">Izaberite...</option>
+                    <option value="supermarket">Supermarket / Maloprodaja</option>
+                    <option value="mesnica">Mesnica / Ribarnica</option>
+                    <option value="horeca">HoReCa / Ugostiteljstvo</option>
+                    <option value="pekara">Pekara / Poslastičarnica</option>
+                    <option value="apoteka">Apoteka / Drogerija</option>
+                    <option value="ostalo">Ostalo</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="area">Površina objekta (m²)</label>
+                  <select id="area" name="area">
+                    <option value="">Izaberite...</option>
+                    <option value="do-200">Do 200 m²</option>
+                    <option value="200-500">200 — 500 m²</option>
+                    <option value="500-1500">500 — 1.500 m²</option>
+                    <option value="1500+">1.500 m² +</option>
+                  </select>
+                </div>
+                <button type="submit" className="btn-primary btn-full">Pošaljite upit</button>
+                <p className="form-note">Bez obaveze · Besplatna procjena · Odgovor za 24h</p>
+              </form>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* BRAND STRIP */}
+      <section className="brand-strip">
+        <div className="container">
+          <p className="brand-strip-label">Vjeruju nam vodeći lanci i brendovi</p>
+          <div className="logo-carousel"><div className="logo-track">
+            {[...clients, ...clients].map((c, i) => <img key={i} src={c.src} alt={c.alt} loading="lazy" decoding="async" />)}
+          </div></div>
+        </div>
+      </section>
+
+      {/* VALUES */}
+      <section className="values" id="values">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-eyebrow">Šta radimo</span>
+            <h2>Partner u projektu, <span className="highlight">ne samo dobavljač</span></h2>
+            <p className="section-desc">Ne prodajemo samo opremu. Ulazimo u projekat od prve linije na papiru do dana otvaranja — i ostajemo dostupni svakog dana nakon toga.</p>
+          </div>
+          <div className="values-grid">
+            <div className="value-card"><div className="value-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M24 14v20M14 24h20" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round"/><circle cx="24" cy="24" r="10" stroke="#0F766E" strokeWidth="2"/></svg></div><h3>Konsultacija & Planiranje</h3><p>Analiziramo prostor, tip objekta i budžet — predlažemo optimalno rješenje prilagođeno vašim specifičnim potrebama i rokovima.</p></div>
+            <div className="value-card"><div className="value-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M16 32l6-6 4 4 8-8" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="12" y="14" width="24" height="20" rx="3" stroke="#0F766E" strokeWidth="2"/></svg></div><h3>Isporuka & Montaža</h3><p>7 dobavljača, jedna isporuka, jedan voditelj projekta — koordiniramo sve i montiramo na dan, bez gužve na gradilištu.</p></div>
+            <div className="value-card"><div className="value-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M24 18v6l4 2" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round"/><circle cx="24" cy="24" r="10" stroke="#0F766E" strokeWidth="2"/></svg></div><h3>Servis & Podrška</h3><p>Servisni tim u Podgorici, garantovan odgovor 24h, dijelovi na lageru. Naš odnos ne završava isporukom.</p></div>
+          </div>
+        </div>
+      </section>
+
+      {/* INDUSTRIES */}
+      <section className="industries" id="industries">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-eyebrow">Rješenja po industriji</span>
+            <h2>Oprema prilagođena <span className="highlight">vašem tipu objekta</span></h2>
+          </div>
+          <div className="industries-grid">
+            {[
+              {href:"/rjesenja/supermarketi",img:"/assets/images/projects/Aromamarketi2.jpg",title:"Supermarketi & Maloprodaja",desc:"Checkout pultovi, rashladni sistemi i polični sistemi za lance do 5.000 m²."},
+              {href:"/rjesenja/mesnice-ribarnice",img:"/assets/images/projects/MesaraPlana.jpg",title:"Mesnice & Ribarnice",desc:"Rashladne vitrine, blokovi za sjeckanje i vakuum oprema za specijalizovane objekte."},
+              {href:"/rjesenja/horeca",img:"/assets/images/projects/RestoranVojvodeStepe.jpg",title:"HoReCa & Ugostiteljstvo",desc:"Inox oprema, rashladne vitrine i kuhinjski sistemi za restorane i hotele."},
+              {href:"/rjesenja/pekare",img:"/assets/images/projects/KafeSoljica3.jpg",title:"Pekare & Poslastičarnice",desc:"Rashladna i izložbena oprema za svježe i konditorske proizvode."},
+              {href:"/rjesenja/apoteke-drogerije",img:"/assets/images/projects/Apoteka-drogerija.jpg",title:"Apoteke & Drogerije",desc:"Moderna oprema za prezentaciju farmaceutskih i kozmetičkih proizvoda."},
+            ].map((item) => (
+              <a key={item.href} href={item.href} className="industry-card">
+                <div className="industry-bg"><img src={item.img} alt={item.title} loading="lazy" decoding="async" /></div>
+                <div className="industry-overlay"></div>
+                <div className="industry-content"><h3>{item.title}</h3><p>{item.desc}</p><span className="industry-link">Pogledajte rješenja <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span></div>
+              </a>
+            ))}
+            <a href="/kontakt" className="industry-card industry-card--cta">
+              <div className="industry-cta-content">
+                <div className="industry-cta-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                <h3>Niste sigurni od čega da krenete?</h3>
+                <p>Pomoći ćemo vam da izaberete pravo rješenje za vaš objekat.</p>
+                <span className="industry-cta-btn">Zakažite konsultaciju <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* REALIZACIJE */}
+      <section className="realizacije" id="realizacije">
+        <div className="realizacije-bg">
+          {[{img:"EDEKAGermany2.jpg",alt:"EDEKA, Njemačka"},{img:"ConadItaly1.jpg",alt:"Conad, Italija"},{img:"Sephora.jpg",alt:"Sephora"},{img:"CarrefourFrance.jpg",alt:"Carrefour, Francuska"},{img:"PoppyBudapest2.jpg",alt:"Poppy, Budimpešta"},{img:"GlobusPilsen.jpg",alt:"Globus, Pilsen"}].map((s,i)=>(
+            <div key={s.img} className={`slider-slide${i===0?" active":""}`} data-index={i}><img src={`/assets/images/realizacije/${s.img}`} alt={s.alt} decoding="async" loading="lazy" /></div>
+          ))}
+        </div>
+        <div className="realizacije-overlay"></div>
+        <div className="realizacije-content">
+          <div className="realizacije-text">
+            <span className="section-eyebrow">Realizacije</span>
+            <h2>Projekti koji govore <span className="highlight">umjesto nas</span></h2>
+            <p>Od Njemačke do Australije — opremamo objekte vodećih lanaca. Svaki projekat je priča o preciznosti, rokovima i kvalitetu bez kompromisa.</p>
+            <div className="realizacije-stats">
+              <div className="real-stat"><strong>12+</strong><span>Zemalja</span></div>
+              <div className="real-stat"><strong>200+</strong><span>Projekata</span></div>
+              <div className="real-stat"><strong>98%</strong><span>Na vrijeme</span></div>
+            </div>
+            <Link href="/reference" className="btn-primary btn-shine">Pogledajte sve realizacije <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></Link>
+          </div>
+          <div className="realizacije-slider-info">
+            <span className="slider-title">EDEKA — Njemačka</span>
+            <div className="slider-dots">
+              {[0,1,2,3,4,5].map(i=><button key={i} className={`slider-dot${i===0?" active":""}`} data-slide={i}></button>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* DESIGN TEASER */}
+      <section className="design-section design-teaser" id="dizajn">
+        <div className="container">
+          <div className="design-intro">
+            <span className="section-eyebrow">Projektovanje i dizajn</span>
+            <h2>Dizajn enterijera za <span className="highlight">retail i HoReCa</span> — od ideje do realizacije</h2>
+            <p className="lead">Uz isporuku i montažu opreme, kreiramo i kompletna dizajnerska rješenja prostora — u saradnji sa renomiranim retail i HoReCa design studijima.</p>
+            <div className="design-services">
+              {["Razvoj idejnih koncepata i dizajnerskih rješenja enterijera","Adaptacija koncepata za različita tržišta i formate","Optimizacija postojećih prodajnih prostora","Koordinacija od koncepta do realizacije na ključ"].map((s)=>(
+                <div key={s} className="service-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><polyline points="20 6 9 17 4 12"/></svg><span>{s}</span></div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="design-strip">
+          <div className="design-strip-track">
+            {[...designItems,...designItems].map((item,i)=>(
+              <div key={i} className="studio-item design-strip-item" data-caption={item.caption}>
+                <img src={item.src} alt={item.caption} loading="lazy" decoding="async" />
+                <span className="studio-item-zoom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                <div className="studio-item-overlay"><span>{item.caption}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="container">
+          <div className="design-teaser-actions">
+            <span className="design-teaser-note"><strong>2 partnerska studija</strong> · 21 idejni koncept za supermarkete, markete, apoteke i ugostiteljske objekte</span>
+            <Link href="/dizajn-enterijera" className="btn-primary">Saznajte više o dizajnu enterijera <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></Link>
+          </div>
+        </div>
+      </section>
+
+      {/* PROCESS */}
+      <section className="process" id="process">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-eyebrow">Proces saradnje</span>
+            <h2>Od prvog poziva do <span className="highlight">otvaranja objekta</span></h2>
+            <p className="section-desc">Vodimo vas kroz svaki korak — transparentno, profesionalno, bez iznenađenja.</p>
+          </div>
+          <div className="process-steps">
+            <div className="process-step"><div className="step-number">01</div><h4>Konsultacija</h4><p>Analiziramo prostor, potrebe i budžet. Besplatna procjena za sve nove projekte.</p></div>
+            <div className="process-connector"></div>
+            <div className="process-step"><div className="step-number">02</div><h4>Ponuda & Plan</h4><p>Izrađujemo detaljnu ponudu s planom rasporeda opreme i vremenskim okvirom.</p></div>
+            <div className="process-connector"></div>
+            <div className="process-step"><div className="step-number">03</div><h4>Isporuka & Montaža</h4><p>Koordiniramo sve dobavljače i obavljamo montažu prema dogovorenom planu.</p></div>
+            <div className="process-connector"></div>
+            <div className="process-step"><div className="step-number">04</div><h4>Podrška & Servis</h4><p>Dugogodišnja tehnička podrška i servisiranje sve isporučene opreme.</p></div>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="stats-banner">
+        <div className="container">
+          <div className="stats-grid">
+            <div className="stat-item"><span className="stat-number">200+</span><span className="stat-text">Realizovanih projekata<br />na 3 kontinenta</span></div>
+            <div className="stat-item"><span className="stat-number">12+</span><span className="stat-text">Premium brendova opreme<br />u ekskluzivnoj ponudi</span></div>
+            <div className="stat-item"><span className="stat-number">15+</span><span className="stat-text">Godina iskustva<br />u industriji</span></div>
+            <div className="stat-item"><span className="stat-number">24h</span><span className="stat-text">Garancija odgovora<br />na svaki upit</span></div>
+          </div>
+        </div>
+      </section>
+
+      {/* BLOG */}
+      <section className="blog-section" id="blog">
+        <div className="container">
+          <div className="blog-header">
+            <div className="blog-header-text"><span className="section-eyebrow">Iz prakse</span><h2>Znanje koje <span className="highlight">štedi budžet</span></h2></div>
+            <Link href="/blog" className="blog-all-link">Svi članci <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></Link>
+          </div>
+          <div className="blog-grid">
+            {blogPosts.map((post) => (
+              <Link key={post.slug} href={`/blog/${post.slug}`} className="blog-card" data-category={post.category}>
+                <span className="blog-card-image">
+                  <span className="blog-category">{post.category}</span>
+                  {post.thumbnail && <img src={post.thumbnail} alt={post.title} loading="lazy" decoding="async" />}
+                </span>
+                <span className="blog-card-body">
+                  {post.publishedAt && <time>{new Date(post.publishedAt).toLocaleDateString("sr-Latn",{day:"numeric",month:"long",year:"numeric"})}</time>}
+                  <h3>{post.title}</h3>
+                  {post.excerpt && <p>{post.excerpt}</p>}
+                  <span className="blog-read-more">Pročitajte članak &rarr;</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* WIZARD CTA */}
+      <section className="wizard-banner">
+        <div className="container"><div className="wizard-content">
+          <h3>Niste sigurni od čega da krenete?</h3>
+          <p>Vodimo vas kroz 3 pitanja do personalizovane preporuke opreme za vaš objekat.</p>
+          <Link href="/pomoc-u-izboru" className="btn-primary">Pomoć u izboru →</Link>
+        </div></div>
+      </section>
+
+      {/* SUPPLIERS */}
+      <section className="suppliers" id="suppliers">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-eyebrow">Naši dobavljači</span>
+            <h2>Biramo brendove kao <span className="highlight">i naše klijente</span></h2>
+            <p className="section-desc">Radimo isključivo sa verifikovanim svjetskim proizvođačima — pouzdanost, servis, dugovječnost.</p>
+          </div>
+          <div className="suppliers-grid">
+            {suppliers.map((s)=>(
+              <div key={s.name} className="supplier-card"><img src={s.src} alt={s.name} loading="lazy" decoding="async" /><span>{s.name}</span></div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </SiteLayout>
   );
 }
