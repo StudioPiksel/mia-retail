@@ -73,3 +73,38 @@ model Settings {
   key   String @unique
   value String
 }
+
+model ProductCategory {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  order    Int       @default(0)
+  products Product[]
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  title       String
+  series      String?
+  description String?
+  specs       String          @default("[]")
+  images      String          @default("[]")
+  categoryId  String
+  category    ProductCategory @relation(fields: [categoryId], references: [id])
+  order       Int             @default(0)
+  published   Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  rjesenjaItems RjesenjaItem[]
+}
+
+model RjesenjaItem {
+  id           String  @id @default(cuid())
+  rjesenjaSlug String
+  productId    String
+  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order        Int     @default(0)
+
+  @@unique([rjesenjaSlug, productId])
+  @@index([rjesenjaSlug])
+}
