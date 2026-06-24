@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SiteLayout from "@/components/layout/SiteLayout";
 import { prisma } from "@/lib/prisma";
+import BlogScrollPopup from "@/components/blog/BlogScrollPopup";
 import Link from "next/link";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -55,17 +56,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
       </article>
 
-      <section className="cta-band" style={{ background: "var(--navy)", padding: "60px 0", textAlign: "center" }}>
-        <div className="container">
-          <h2 style={{ color: "#fff", marginBottom: 20 }}>Trebate savjet za vaš objekat?</h2>
-          <p style={{ color: "rgba(255,255,255,0.8)", marginBottom: 30, maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
-            Naš tim stručnjaka vam stoji na raspolaganju za besplatne konsultacije i odabir prave opreme.
-          </p>
-          <Link href="/kontakt" className="btn-primary">
-            Kontaktirajte nas <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </Link>
-        </div>
-      </section>
+      {/* Scroll popup — pojavljuje se na 65% skrola, samo na blog postovima */}
+      <BlogScrollPopup />
     </SiteLayout>
   );
 }
