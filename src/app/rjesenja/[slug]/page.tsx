@@ -383,27 +383,6 @@ export default async function RjesenjaPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
-      {/* ── OTHER RJESENJA ── */}
-      <section style={{ padding: "60px 0", background: "var(--gray-50)" }}>
-        <div className="container">
-          <div className="section-header" style={{ marginBottom: 32 }}>
-            <span className="section-eyebrow">Ostala rješenja</span>
-            <h2>Radimo i za <span className="highlight">druge industrije</span></h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
-            {otherRjesenja.map(([s, r]) => (
-              <Link key={s} href={`/rjesenja/${s}`} style={{
-                display: "block", padding: "18px 22px", background: "#fff",
-                borderRadius: 12, border: "1px solid var(--gray-200)",
-                textDecoration: "none", color: "var(--navy)", fontWeight: 600, fontSize: 14,
-                transition: "box-shadow 0.2s, border-color 0.2s",
-              }}>
-                {r.title} {r.highlight} →
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <Script src="/script.js" strategy="afterInteractive" />
     </SiteLayout>
