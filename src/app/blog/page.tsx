@@ -29,7 +29,7 @@ export default async function BlogPage({
   const [featured, ...rest] = posts;
 
   return (
-    <SiteLayout currentPage="/blog">
+    <SiteLayout currentPage="/blog" extraCss={["/blog-article.css"]}>
       {/* HERO */}
       <section className="solution-hero blog-index-hero">
         <div className="container">
@@ -56,8 +56,9 @@ export default async function BlogPage({
             {categories.map((c) => (
               <Link
                 key={c}
-                href={c === "Sve" ? "/blog" : `/blog?cat=${c}`}
+                href={c === "Sve" ? "/blog" : `/blog?cat=${encodeURIComponent(c)}`}
                 className={`blog-filter${activeCategory === c ? " active" : ""}`}
+                style={{ textDecoration: "none" }}
               >
                 {c}
               </Link>
