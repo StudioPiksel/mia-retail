@@ -9,6 +9,7 @@ const nav = [
   { href: "/admin/products", label: "Proizvodi", icon: "📦" },
   { href: "/admin/rjesenja/supermarketi", label: "Rješenja editor", icon: "🏪" },
   { href: "/admin/realizacije", label: "Realizacije", icon: "🏆" },
+  { href: "/admin/dizajn-enterijera", label: "Dizajn enterijera", icon: "🎨" },
   { href: "/admin/blog", label: "Blog", icon: "✏" },
   { href: "/admin/settings", label: "Postavke", icon: "⚙" },
   { href: "/admin/users", label: "Korisnici", icon: "👤" },

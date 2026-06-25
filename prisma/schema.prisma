@@ -100,6 +100,27 @@ model Product {
   rjesenjaItems RjesenjaItem[]
 }
 
+model DesignStudio {
+  id       String          @id @default(cuid())
+  badge    String
+  name     String
+  tag      String
+  order    Int             @default(0)
+  projects DesignProject[]
+}
+
+model DesignProject {
+  id           String        @id @default(cuid())
+  studioId     String
+  studio       DesignStudio  @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  caption      String
+  overlayLabel String
+  image        String
+  order        Int           @default(0)
+  published    Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+}
+
 model Realizacija {
   id          String   @id @default(cuid())
   name        String
