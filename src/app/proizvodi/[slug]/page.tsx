@@ -6,6 +6,15 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Script from "next/script";
 
+const STD_REALIZACIJE = [
+  { img: "/assets/images/reference/EDEKA_Germany.jpg", label: "EDEKA — Njemačka" },
+  { img: "/assets/images/reference/Conad_Italy.jpg", label: "Conad — Italija" },
+  { img: "/assets/images/reference/Carrefour_France.jpg", label: "Carrefour — Francuska" },
+  { img: "/assets/images/reference/Globus_Pilsen.jpg", label: "Globus — Pilsen" },
+  { img: "/assets/images/reference/Sephora.jpg", label: "Sephora" },
+  { img: "/assets/images/reference/Poppy_Budapest.jpg", label: "Poppy — Budimpešta" },
+];
+
 type PageConfig = {
   eyebrow: string;
   h1: string;
@@ -61,6 +70,14 @@ const CONFIG: Record<string, PageConfig> = {
       li: ["Uspravni frižideri sa staklenim vratima za napitke i mliječni program", "Zamrzivači (skrinje i uspravni) za smrznuti program", "Modularne hladne i komore za zamrzavanje po mjeri", "Nadzor temperature i alarmiranje", "Energetski razredi sa optimizovanom potrošnjom"],
     },
     ctaTitle: "Trebate rashladna rješenja za vaš objekat?",
+    realizacije: [
+      { img: "/assets/images/reference/EDEKA_Germany.jpg", label: "EDEKA — Njemačka" },
+      { img: "/assets/images/reference/Conad_Italy.jpg", label: "Conad — Italija" },
+      { img: "/assets/images/reference/Carrefour_France.jpg", label: "Carrefour — Francuska" },
+      { img: "/assets/images/reference/Globus_Pilsen.jpg", label: "Globus — Pilsen" },
+      { img: "/assets/images/reference/Sephora.jpg", label: "Sephora" },
+      { img: "/assets/images/reference/Poppy_Budapest.jpg", label: "Poppy — Budimpešta" },
+    ],
   },
   "checkout-kase": {
     eyebrow: "Proizvodi", h1: "Checkout &", highlight: "Kasa pultovi",
@@ -75,6 +92,7 @@ const CONFIG: Record<string, PageConfig> = {
       li: ["Standard, premium i convenience modeli pultova", "Trakaste kase za veći protok kupaca", "Impulsne zone za dodatnu prodaju kod naplate", "Integracija sa SmartPos i Netris sistemima", "Ergonomija za kasira i pristupačnost za kupce"],
     },
     ctaTitle: "Planirate opremanje zone naplate?",
+    realizacije: STD_REALIZACIJE,
   },
   "policni-sistemi": {
     eyebrow: "Proizvodi", h1: "Polični", highlight: "sistemi",
@@ -89,6 +107,7 @@ const CONFIG: Record<string, PageConfig> = {
       li: ["Modularne gondole i zidne police promjenjive visine", "Pusheri i sistemi za automatsko poravnavanje proizvoda", "Cjenovne šine i držači za jasne cijene", "ESL — elektronski cjenovnici sa centralnim ažuriranjem", "Brendiranje topera i bočnih stranica"],
     },
     ctaTitle: "Trebate polični sistem za vaš objekat?",
+    realizacije: STD_REALIZACIJE,
   },
   "inox-kuhinja": {
     eyebrow: "Proizvodi", h1: "Inox &", highlight: "Kuhinjska oprema",
@@ -103,6 +122,7 @@ const CONFIG: Record<string, PageConfig> = {
       li: ["Radni stolovi i blokovi od AISI 304/316 inoxa", "Jedno- i dvodjelne sudopere sa higijenskim slavinama", "Nape za odvod pare i dima sa filterima", "Termička linija — šporeti, friteze, bain-marie", "Izrada po mjeri prostora i radnih procesa"],
     },
     ctaTitle: "Trebate inox opremu za vaš prostor?",
+    realizacije: STD_REALIZACIJE,
   },
   "kolica-korpe": {
     eyebrow: "Proizvodi", h1: "Kolica &", highlight: "Korpe",
@@ -117,6 +137,7 @@ const CONFIG: Record<string, PageConfig> = {
       li: ["Samba i Eko Color plastična kolica u brend boji", "Žičana kolica raznih zapremina", "Ručne korpe i korpe na točkićima (trolley)", "Opcije od recikliranog materijala", "Izdržljivost na intenzivan svakodnevni rad"],
     },
     ctaTitle: "Trebate kolica i korpe za vaš objekat?",
+    realizacije: STD_REALIZACIJE,
   },
   "usmjeravanje": {
     eyebrow: "Proizvodi", h1: "Sistemi za", highlight: "usmjeravanje kupaca",
@@ -131,6 +152,7 @@ const CONFIG: Record<string, PageConfig> = {
       li: ["Mehaničke i elektronske ulazne barijere (Porta serija)", "Vertikalni turniketi za kontrolisan prolaz", "ITAB automatske ulazne i izlazne kapije (AlphaGate, SigmaGate)", "Staklene pregrade i jednosmjerni izlazni sistemi", "Pristupačna rješenja za kolica i korisnike sa smanjenom pokretljivošću"],
     },
     ctaTitle: "Planirate usmjeravanje kupaca u vašem objektu?",
+    realizacije: STD_REALIZACIJE,
   },
 };
 
