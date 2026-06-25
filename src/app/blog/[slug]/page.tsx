@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import SiteLayout from "@/components/layout/SiteLayout";
 import { prisma } from "@/lib/prisma";
 import BlogScrollPopup from "@/components/blog/BlogScrollPopup";
-import Link from "next/link";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -18,10 +17,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   if (!post || !post.published) notFound();
 
   return (
-    <SiteLayout currentPage="/blog" extraCss={["/blog-article.css"]}>
-      <article className="single-article">
+    <SiteLayout currentPage="/blog" extraCss={["/blog-article.css"]} headerLight>
+      {/* padding-top: 108px = utility bar (35) + fixed header (73) */}
+      <article className="single-article" style={{ paddingTop: 108 }}>
         <div className="container">
-          <header className="article-header">
+          <header className="article-header" style={{ paddingTop: 0 }}>
             <div className="article-meta">
               <span className="article-category">{post.category}</span>
               {post.publishedAt && (
@@ -56,7 +56,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
       </article>
 
-      {/* Scroll popup — pojavljuje se na 65% skrola, samo na blog postovima */}
+      {/* Scroll popup na 65% skrola */}
       <BlogScrollPopup />
     </SiteLayout>
   );

@@ -6,10 +6,12 @@ export default function SiteLayout({
   children,
   currentPage = "",
   extraCss = [],
+  headerLight = false,
 }: {
   children: React.ReactNode;
   currentPage?: string;
   extraCss?: string[];
+  headerLight?: boolean;
 }) {
   return (
     <>
@@ -19,6 +21,13 @@ export default function SiteLayout({
       {extraCss.map((css) => (
         <link key={css} rel="stylesheet" href={css} />
       ))}
+      {/* Force header white on non-dark-hero pages */}
+      {headerLight && (
+        <style>{`
+          .site-header { background: #fff !important; box-shadow: 0 1px 0 #E2E8ED !important; }
+          .site-header .nav-link, .site-header .logo-link { color: var(--navy) !important; }
+        `}</style>
+      )}
       <Header currentPage={currentPage} />
       <main>{children}</main>
       <Footer />
