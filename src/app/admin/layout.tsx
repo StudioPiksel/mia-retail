@@ -11,6 +11,7 @@ const nav = [
   { href: "/admin/realizacije", label: "Realizacije", icon: "🏆" },
   { href: "/admin/dizajn-enterijera", label: "Dizajn enterijera", icon: "🎨" },
   { href: "/admin/o-nama", label: "O nama", icon: "🏢" },
+  { href: "/admin/pomoc-u-izboru", label: "Pomoć u izboru", icon: "🧭" },
   { href: "/admin/blog", label: "Blog", icon: "✏" },
   { href: "/admin/settings", label: "Postavke", icon: "⚙" },
   { href: "/admin/users", label: "Korisnici", icon: "👤" },
