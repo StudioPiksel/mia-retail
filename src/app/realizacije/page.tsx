@@ -34,32 +34,55 @@ export default function RealizacijePage() {
 
   return (
     <SiteLayout currentPage="/realizacije" extraCss={["/reference.css"]}>
-      {/* HERO */}
-      <section className="reference-gallery-section" style={{ paddingTop: 0 }}>
-        <section className="solution-hero reference-hero">
-          <div className="reference-hero-bg" style={{ backgroundImage: "url('/assets/images/realizacije/EDEKAGermany2.jpg')" }} />
-          <div className="reference-hero-overlay" />
-          <div className="container">
-            <div className="reference-hero-content">
-              <nav className="breadcrumb" style={{ color: "rgba(255,255,255,0.7)", marginBottom: 20 }}>
-                <Link href="/" style={{ color: "rgba(255,255,255,0.7)" }}>Početna</Link>
-                <span className="sep"> / </span>
-                <span style={{ color: "#fff" }}>Realizacije</span>
-              </nav>
-              <span className="hero-eyebrow">REALIZACIJE</span>
-              <h1>Naša rješenja u vodećim <span className="highlight">svjetskim trgovinama</span></h1>
-              <p className="hero-desc">
-                Oprema koju nudimo ugrađena je u objekte vodećih svjetskih maloprodajnih lanaca.
-                Pogledajte realizacije naših provjerenih partnera — grupisane po brendu i tipu objekta.
-              </p>
-              <div className="reference-stats">
-                <div className="stat-item"><span className="stat-number">37+</span><span className="stat-label">Realizacija</span></div>
-                <div className="stat-item"><span className="stat-number">15+</span><span className="stat-label">Zemalja</span></div>
-                <div className="stat-item"><span className="stat-number">Top</span><span className="stat-label">Svjetski brendovi</span></div>
-              </div>
-            </div>
+      {/* HERO — navy background + teal radial glow (kao original) */}
+      <section style={{
+        position: "relative",
+        background: "linear-gradient(120deg, #0B1D33 0%, #0d2237 100%)",
+        color: "#fff",
+        padding: "120px 0 72px",
+        overflow: "hidden",
+      }}>
+        {/* Radial glow — teal u gornjem desnom uglu */}
+        <div style={{
+          position: "absolute", right: -80, top: -80,
+          width: 380, height: 380, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(15,118,110,0.35), transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        <div className="container" style={{ position: "relative", zIndex: 1, maxWidth: 820 }}>
+          <nav className="breadcrumb" style={{ marginBottom: 20 }}>
+            <Link href="/" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none" }}>Početna</Link>
+            <span style={{ color: "rgba(255,255,255,0.45)", margin: "0 8px" }}>/</span>
+            <span style={{ color: "rgba(255,255,255,0.45)" }}>Realizacije</span>
+          </nav>
+
+          <span style={{
+            display: "inline-block", padding: "6px 14px",
+            background: "rgba(199,241,230,0.15)", border: "1px solid rgba(199,241,230,0.4)",
+            color: "#C7F1E6", fontSize: 13, fontWeight: 600,
+            borderRadius: 100, letterSpacing: "0.05em", marginBottom: 20,
+          }}>REALIZACIJE</span>
+
+          <h1 style={{ fontSize: "3.25rem", fontWeight: 900, color: "#fff", lineHeight: 1.1, margin: "0 0 20px" }}>
+            Naša rješenja u vodećim{" "}
+            <span style={{ color: "#0F766E" }}>svjetskim<br />trgovinama</span>
+          </h1>
+
+          <p style={{ fontSize: "1.075rem", color: "rgba(255,255,255,0.82)", lineHeight: 1.7, maxWidth: 660, margin: 0 }}>
+            Oprema koju nudimo ugrađena je u objekte vodećih svjetskih maloprodajnih lanaca.
+            Pogledajte realizacije naših provjerenih partnera — grupisane po brendu i tipu objekta.
+          </p>
+
+          <div className="reference-stats">
+            <div className="stat-item"><span className="stat-number">37+</span><span className="stat-label">Realizacija</span></div>
+            <div className="stat-item"><span className="stat-number">15+</span><span className="stat-label">Zemalja</span></div>
+            <div className="stat-item"><span className="stat-number">Top</span><span className="stat-label">Svjetski brendovi</span></div>
           </div>
-        </section>
+        </div>
+      </section>
+
+      <section className="reference-gallery-section">
 
         {/* GALLERY */}
         <div className="container">
