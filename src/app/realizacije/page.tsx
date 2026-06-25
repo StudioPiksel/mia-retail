@@ -50,7 +50,8 @@ export default function RealizacijePage() {
           pointerEvents: "none",
         }} />
 
-        <div className="container" style={{ position: "relative", zIndex: 1, maxWidth: 820 }}>
+        <div className="container" style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ maxWidth: 820 }}>
           <nav className="breadcrumb" style={{ marginBottom: 20 }}>
             <Link href="/" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none" }}>Početna</Link>
             <span style={{ color: "rgba(255,255,255,0.45)", margin: "0 8px" }}>/</span>
@@ -78,6 +79,7 @@ export default function RealizacijePage() {
             <div className="stat-item"><span className="stat-number">37+</span><span className="stat-label">Realizacija</span></div>
             <div className="stat-item"><span className="stat-number">15+</span><span className="stat-label">Zemalja</span></div>
             <div className="stat-item"><span className="stat-number">Top</span><span className="stat-label">Svjetski brendovi</span></div>
+          </div>
           </div>
         </div>
       </section>
