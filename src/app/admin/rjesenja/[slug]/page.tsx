@@ -17,16 +17,10 @@ type Zones = { badge: string; h2: string; desc: string; items: Zone[] };
 type RealizItem = { img: string; label: string };
 type Realizacije = { items: RealizItem[] };
 type Cta = { h2: string; p: string };
-type Product = { id: string; title: string; series?: string; images: string; category: { name: string } };
+type Product = { id: string; title: string; series?: string; images: string; category: { id: string; name: string; slug: string } };
 type RjesenjaItem = { id: string; order: number; product: Product };
-
-const LABELS: Record<string, string> = {
-  supermarketi: "Supermarketi & Maloprodaja",
-  "mesnice-ribarnice": "Mesnice & Ribarnice",
-  horeca: "HoReCa & Ugostiteljstvo",
-  pekare: "Pekare & Poslastičarnice",
-  "apoteke-drogerije": "Apoteke & Drogerije",
-};
+type RjesenjaPage = { slug: string; label: string; bg: string };
+type ProductCategory = { id: string; name: string; slug: string };
 
 type Tab = "hero" | "zone" | "realizacije" | "cta" | "proizvodi";
 
@@ -67,24 +61,30 @@ export default function RjesenjaEditor() {
   const [cta, setCta] = useState<Cta | null>(null);
   const [items, setItems] = useState<RjesenjaItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [allCategories, setAllCategories] = useState<ProductCategory[]>([]);
+  const [pages, setPages] = useState<RjesenjaPage[]>([]);
   const [prodSearch, setProdSearch] = useState("");
+  const [catFilter, setCatFilter] = useState("all");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const load = useCallback(async () => {
-    const [settings, rjItems, prods] = await Promise.all([
+    const [settings, rjItems, prods, cats] = await Promise.all([
       fetch("/api/settings").then(r => r.json()),
       fetch(`/api/rjesenja-items?slug=${slug}`).then(r => r.json()),
       fetch("/api/products").then(r => r.json()),
+      fetch("/api/products/categories").then(r => r.json()),
     ]);
     try { setHero(JSON.parse(settings[`rjesenja_${slug}_hero`])); } catch {}
     try { setZones(JSON.parse(settings[`rjesenja_${slug}_zones`])); } catch {}
     try { setRealizacije(JSON.parse(settings[`rjesenja_${slug}_realizacije`])); } catch {}
     try { setCta(JSON.parse(settings[`rjesenja_${slug}_cta`])); } catch {}
+    try { setPages(JSON.parse(settings.rjesenja_pages ?? "[]")); } catch {}
     setItems(rjItems);
     setAllProducts(prods);
+    setAllCategories(cats);
   }, [slug]);
 
   useEffect(() => { load(); }, [load]);
@@ -141,8 +141,38 @@ export default function RjesenjaEditor() {
     await load();
   }
 
+  // Delete all products from a category section
+  async function deleteSection(categoryName: string) {
+    if (!confirm(`Obrisati cijelu sekciju "${categoryName}" sa ove stranice?`)) return;
+    const sectionItems = items.filter(i => i.product.category.name === categoryName);
+    for (const item of sectionItems) {
+      await fetch("/api/rjesenja-items", {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id }),
+      });
+    }
+    await load();
+  }
+
+  // Add all products from a category
+  async function addCategorySection(catId: string) {
+    const catProducts = allProducts.filter(p => p.category.id === catId && !assignedIds.has(p.id));
+    for (const prod of catProducts.slice(0, 4)) {
+      await fetch("/api/rjesenja-items", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rjesenjaSlug: slug, productId: prod.id }),
+      });
+    }
+    await load();
+  }
+
   const assignedIds = new Set(items.map(i => i.product.id));
-  const available = allProducts.filter(p => !assignedIds.has(p.id) && (!prodSearch || p.title.toLowerCase().includes(prodSearch.toLowerCase())));
+  const assignedCatIds = new Set(items.map(i => i.product.category.id));
+  const available = allProducts.filter(p =>
+    !assignedIds.has(p.id) &&
+    (catFilter === "all" || p.category.id === catFilter) &&
+    (!prodSearch || p.title.toLowerCase().includes(prodSearch.toLowerCase()))
+  );
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
     { key: "hero", label: "Hero", icon: "🖼" },
@@ -157,15 +187,37 @@ export default function RjesenjaEditor() {
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 13, color: "#6B7B8A", marginBottom: 4 }}>
-          <a href="/admin" style={{ color: "#6B7B8A", textDecoration: "none" }}>Admin</a> › Rješenja
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: "#6B7B8A", marginBottom: 8 }}>
+          <a href="/admin" style={{ color: "#6B7B8A", textDecoration: "none" }}>Admin</a>
+          {" › "}
+          <a href="/admin/rjesenja" style={{ color: "#6B7B8A", textDecoration: "none" }}>Rješenja</a>
+          {" › "}
+          <span style={{ color: "#0B1D33", fontWeight: 500 }}>{pages.find(p => p.slug === slug)?.label ?? slug}</span>
         </div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>
-          {LABELS[slug] ?? slug}
+
+        {/* Page switcher */}
+        {pages.length > 1 && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+            {pages.map(p => (
+              <a key={p.slug} href={`/admin/rjesenja/${p.slug}`} style={{
+                padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, textDecoration: "none",
+                background: p.slug === slug ? "#0B1D33" : "#F8FAFB",
+                color: p.slug === slug ? "#C7F1E6" : "#6B7B8A",
+                border: p.slug === slug ? "1.5px solid #0B1D33" : "1.5px solid #E2E8ED",
+              }}>{p.label}</a>
+            ))}
+            <a href="/admin/rjesenja" style={{ padding: "6px 12px", borderRadius: 20, fontSize: 12, color: "#0F766E", border: "1.5px solid #0F766E", textDecoration: "none", fontWeight: 600 }}>
+              + Nova
+            </a>
+          </div>
+        )}
+
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: "#0B1D33", margin: 0 }}>
+          {pages.find(p => p.slug === slug)?.label ?? slug}
         </h1>
-        <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>
-          Uređivač svake sekcije stranice — identično frontendu
+        <p style={{ color: "#6B7B8A", fontSize: 13, marginTop: 4 }}>
+          Uređivač svake sekcije — promjene su odmah vidljive na sajtu
         </p>
       </div>
 
@@ -286,35 +338,61 @@ export default function RjesenjaEditor() {
       {/* ── TAB: PROIZVODI ── */}
       {tab === "proizvodi" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24, alignItems: "start" }}>
-          {/* Left: grouped products */}
+          {/* Left: grouped product sections */}
           <div>
-            <div style={{ marginBottom: 20 }}>
-              <strong style={{ fontSize: 15, color: "#0B1D33" }}>Dodani proizvodi ({items.length})</strong>
-              <p style={{ fontSize: 13, color: "#6B7B8A", margin: "4px 0 0" }}>Grupisani po kategoriji — kao na frontendu. Prevuci za promjenu redoslijeda unutar grupe.</p>
+            <div style={{ marginBottom: 16 }}>
+              <strong style={{ fontSize: 15, color: "#0B1D33" }}>Sekcije proizvoda ({groups.length})</strong>
+              <p style={{ fontSize: 13, color: "#6B7B8A", margin: "4px 0 0" }}>Svaka sekcija = jedna kategorija prikazana na stranici. Prevuci kartice za redoslijed unutar sekcije.</p>
             </div>
+
+            {/* Add section by category */}
+            {allCategories.filter(c => !assignedCatIds.has(c.id)).length > 0 && (
+              <div style={{ marginBottom: 20, padding: "12px 16px", background: "#F0FDF4", borderRadius: 10, border: "1px solid #BBF7D0", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 13, color: "#16A34A", fontWeight: 600 }}>+ Dodaj sekciju:</span>
+                {allCategories.filter(c => !assignedCatIds.has(c.id)).map(cat => (
+                  <button key={cat.id} onClick={() => addCategorySection(cat.id)} style={{
+                    padding: "5px 12px", background: "#fff", border: "1.5px solid #16A34A", borderRadius: 20,
+                    cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#16A34A", fontFamily: "'Satoshi', sans-serif",
+                  }}>
+                    {cat.name} →
+                  </button>
+                ))}
+              </div>
+            )}
 
             {groups.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", background: "#F8FAFB", borderRadius: 12, border: "1.5px dashed #E2E8ED", color: "#6B7B8A" }}>
-                Nema dodanih proizvoda. Dodajte ih iz panela desno.
+                Nema sekcija. Dodajte sekciju gore ili pojedinačne proizvode iz panela desno.
               </div>
             ) : (
               groups.map(group => (
-                <div key={group.name} style={{ marginBottom: 28 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div key={group.name} style={{ marginBottom: 24, background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden" }}>
+                  {/* Section header */}
+                  <div style={{ padding: "12px 16px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div>
                       <span style={{ fontSize: 14, fontWeight: 700, color: "#0B1D33" }}>{group.name}</span>
                       <span style={{ fontSize: 12, color: "#6B7B8A", marginLeft: 8 }}>{group.items.length} proizvoda</span>
                     </div>
+                    <button onClick={() => deleteSection(group.name)} style={{
+                      padding: "5px 12px", background: "#FEF2F2", color: "#DC2626", border: "none",
+                      borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 500, fontFamily: "'Satoshi', sans-serif",
+                    }}>
+                      🗑 Obriši sekciju
+                    </button>
                   </div>
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={e => handleDragEnd(e, group.items)}>
-                    <SortableContext items={group.items.map(i => i.id)} strategy={rectSortingStrategy}>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
-                        {group.items.map(item => (
-                          <SortablePCard key={item.id} item={item} onRemove={removeItem} />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
+
+                  {/* Products grid */}
+                  <div style={{ padding: 14 }}>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={e => handleDragEnd(e, group.items)}>
+                      <SortableContext items={group.items.map(i => i.id)} strategy={rectSortingStrategy}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+                          {group.items.map(item => (
+                            <SortablePCard key={item.id} item={item} onRemove={removeItem} />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  </div>
                 </div>
               ))
             )}
@@ -323,12 +401,17 @@ export default function RjesenjaEditor() {
           {/* Right: product picker */}
           <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden", position: "sticky", top: 80 }}>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid #E2E8ED" }}>
-              <strong style={{ fontSize: 13, color: "#0B1D33" }}>Dodaj proizvod</strong>
+              <strong style={{ fontSize: 13, color: "#0B1D33" }}>Dodaj pojedinačni proizvod</strong>
               <input value={prodSearch} onChange={e => setProdSearch(e.target.value)}
-                placeholder="Pretraži..." style={{ display: "block", width: "100%", marginTop: 8, padding: "8px 10px", border: "1.5px solid #E2E8ED", borderRadius: 7, fontSize: 12, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                placeholder="Pretraži po nazivu..." style={{ display: "block", width: "100%", marginTop: 8, padding: "8px 10px", border: "1.5px solid #E2E8ED", borderRadius: 7, fontSize: 12, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box" }} />
+              <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 6, padding: "7px 10px", border: "1.5px solid #E2E8ED", borderRadius: 7, fontSize: 12, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box", background: "#fff" }}>
+                <option value="all">Sve kategorije</option>
+                {allCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
-            <div style={{ maxHeight: 480, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 5 }}>
-              {available.slice(0, 30).map(prod => {
+            <div style={{ maxHeight: 440, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 5 }}>
+              {available.slice(0, 40).map(prod => {
                 const img = (() => { try { return JSON.parse(prod.images)[0]; } catch { return null; } })();
                 return (
                   <button key={prod.id} onClick={() => addProduct(prod.id)} style={{

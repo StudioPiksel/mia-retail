@@ -7,7 +7,7 @@ const nav = [
   { href: "/admin", label: "Dashboard", icon: "⬛" },
   { href: "/admin/menu", label: "Meni", icon: "☰" },
   { href: "/admin/products", label: "Proizvodi", icon: "📦" },
-  { href: "/admin/rjesenja/supermarketi", label: "Rješenja editor", icon: "🏪" },
+  { href: "/admin/rjesenja", label: "Rješenja stranice", icon: "🏪" },
   { href: "/admin/realizacije", label: "Realizacije", icon: "🏆" },
   { href: "/admin/dizajn-enterijera", label: "Dizajn enterijera", icon: "🎨" },
   { href: "/admin/o-nama", label: "O nama", icon: "🏢" },
