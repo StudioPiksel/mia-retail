@@ -72,10 +72,17 @@ export default async function DizajnEnterijeraPage() {
               Uz isporuku i montažu opreme, kreiramo i kompletna dizajnerska rješenja prostora. Kroz saradnju sa renomiranim retail i HoReCa design studijima razvijamo funkcionalne i prepoznatljive enterijere — prilagođene identitetu brenda, budžetu i specifičnostima svakog projekta.
             </p>
 
-            <div className="reference-stats">
-              <div className="stat-item"><span className="stat-number">{studios.length}</span><span className="stat-label">Partnerska studija</span></div>
-              <div className="stat-item"><span className="stat-number">{totalProjects}</span><span className="stat-label">Idejnih koncepata</span></div>
-              <div className="stat-item"><span className="stat-number">Na ključ</span><span className="stat-label">Od ideje do otvaranja</span></div>
+            <div style={{ display: "flex", gap: 40, marginTop: 36, paddingTop: 28, borderTop: "1px solid rgba(255,255,255,0.12)", flexWrap: "wrap" }}>
+              {[
+                { num: studios.length, label: "Partnerska studija" },
+                { num: totalProjects, label: "Idejnih koncepata" },
+                { num: "Na ključ", label: "Od ideje do otvaranja" },
+              ].map(s => (
+                <div key={s.label} style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontSize: "2.4rem", fontWeight: 800, color: "#0F766E", lineHeight: 1 }}>{s.num}</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 6 }}>{s.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
