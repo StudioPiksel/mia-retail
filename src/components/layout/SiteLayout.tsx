@@ -18,6 +18,7 @@ export default function SiteLayout({
       <link rel="stylesheet" href="/style.css" />
       <link rel="stylesheet" href="/design.css" />
       <link rel="stylesheet" href="/rebuild.css" />
+      <link rel="stylesheet" href="/badges.css" />
       {extraCss.map((css) => (
         <link key={css} rel="stylesheet" href={css} />
       ))}

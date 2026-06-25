@@ -1,0 +1,125 @@
+/* ═══════════════════════════════════════════════════════════
+   MIA BADGES — Branded section markers
+   A: light sections (grid mark + navy text)
+   C: dark sections (grid mark + navy pill + mint text)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── SVG grid mark data URIs ─────────────────────────────── */
+:root {
+  --badge-mark-light: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='5.5' height='5.5' rx='1' fill='%230F766E'/%3E%3Crect x='8.5' y='0' width='5.5' height='5.5' rx='1' fill='%230F766E' opacity='0.5'/%3E%3Crect x='0' y='8.5' width='5.5' height='5.5' rx='1' fill='%230F766E' opacity='0.5'/%3E%3Crect x='8.5' y='8.5' width='5.5' height='5.5' rx='1' fill='%230F766E' opacity='0.25'/%3E%3C/svg%3E");
+  --badge-mark-dark:  url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 10 10' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='4' height='4' rx='0.8' fill='%23C7F1E6'/%3E%3Crect x='6' y='0' width='4' height='4' rx='0.8' fill='%23C7F1E6' opacity='0.5'/%3E%3Crect x='0' y='6' width='4' height='4' rx='0.8' fill='%23C7F1E6' opacity='0.5'/%3E%3Crect x='6' y='6' width='4' height='4' rx='0.8' fill='%23C7F1E6' opacity='0.25'/%3E%3C/svg%3E");
+}
+
+/* ── OPTION A: Light sections ─────────────────────────────── */
+.section-badge,
+.section-eyebrow:not(.solution-hero .section-eyebrow):not(.realizacije .section-eyebrow):not(.realizacije-text .section-eyebrow) {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: #0B1D33 !important;
+  margin-bottom: 12px !important;
+}
+
+.section-badge::before,
+.section-eyebrow:not(.solution-hero .section-eyebrow):not(.realizacije .section-eyebrow):not(.realizacije-text .section-eyebrow)::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-image: var(--badge-mark-light);
+  background-size: contain;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+/* ── OPTION C: Dark section badges (hero, partner, realizacije) ── */
+.solution-hero-eyebrow,
+.hero-eyebrow,
+.solution-hero .section-eyebrow,
+.realizacije .section-eyebrow,
+.realizacije-text .section-eyebrow,
+.about-partner-inner .section-badge,
+.design-intro .section-eyebrow,
+.cta-section .section-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  background: rgba(11, 29, 51, 0.55) !important;
+  border: 1px solid rgba(199, 241, 230, 0.25) !important;
+  border-radius: 6px !important;
+  padding: 5px 12px 5px 8px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: #C7F1E6 !important;
+  margin-bottom: 16px !important;
+}
+
+.solution-hero-eyebrow::before,
+.hero-eyebrow::before,
+.solution-hero .section-eyebrow::before,
+.realizacije .section-eyebrow::before,
+.realizacije-text .section-eyebrow::before,
+.about-partner-inner .section-badge::before,
+.design-intro .section-eyebrow::before,
+.cta-section .section-badge::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-image: var(--badge-mark-dark);
+  background-size: contain;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+/* Resetuj ::before za section-badge unutar dark konteksta
+   (da ne duplira mark iz light stila) */
+.about-partner-inner .section-badge::before,
+.cta-section .section-badge::before {
+  background-image: var(--badge-mark-dark) !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+
+/* Dizajn enterijera stranica — posebne klase */
+.design-section .section-eyebrow {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: #0B1D33 !important;
+  margin-bottom: 12px !important;
+}
+
+.design-section .section-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-image: var(--badge-mark-light);
+  background-size: contain;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+/* O nama page inline badge na o-nama-specifičnim sekcijama */
+.realizacije-stats + * .section-eyebrow {
+  color: #C7F1E6 !important;
+}
