@@ -24,7 +24,7 @@ export default function Footer() {
             <h5>Kompanija</h5>
             <ul>
               <li><Link href="/o-nama">O nama</Link></li>
-              <li><Link href="/reference">Reference</Link></li>
+              <li><Link href="/realizacije">Realizacije</Link></li>
               <li><Link href="/dizajn-enterijera">Dizajn enterijera</Link></li>
               <li><Link href="/blog">Blog</Link></li>
               <li><Link href="/kontakt">Kontakt</Link></li>

@@ -163,7 +163,7 @@ export default function Header({ currentPage = "" }: { currentPage?: string }) {
 
               {[
                 { href: "/pomoc-u-izboru", label: "Pomoć u izboru" },
-                { href: "/reference", label: "Reference" },
+                { href: "/realizacije", label: "Realizacije" },
                 { href: "/dizajn-enterijera", label: "Dizajn enterijera" },
                 { href: "/o-nama", label: "O nama" },
                 { href: "/blog", label: "Blog" },
