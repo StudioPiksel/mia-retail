@@ -2,19 +2,25 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
-  DndContext, closestCenter, KeyboardSensor, PointerSensor,
-  useSensor, useSensors, DragEndEvent,
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
 } from "@dnd-kit/core";
 import {
-  arrayMove, SortableContext, sortableKeyboardCoordinates,
-  useSortable, rectSortingStrategy,
+  arrayMove, SortableContext, useSortable, rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+// ── Types ──────────────────────────────────────────────────────────────────
+type Stat = { num: string; label: string };
+type Hero = { eyebrow: string; h1: string; h1Highlight: string; lead: string; heroBg: string; stats: Stat[]; ghostLabel: string; ghostHref: string };
+type Zone = { title: string; desc: string };
+type Zones = { badge: string; h2: string; desc: string; items: Zone[] };
+type RealizItem = { img: string; label: string };
+type Realizacije = { items: RealizItem[] };
+type Cta = { h2: string; p: string };
 type Product = { id: string; title: string; series?: string; images: string; category: { name: string } };
 type RjesenjaItem = { id: string; order: number; product: Product };
 
-const RJESENJA_LABELS: Record<string, string> = {
+const LABELS: Record<string, string> = {
   supermarketi: "Supermarketi & Maloprodaja",
   "mesnice-ribarnice": "Mesnice & Ribarnice",
   horeca: "HoReCa & Ugostiteljstvo",
@@ -22,83 +28,96 @@ const RJESENJA_LABELS: Record<string, string> = {
   "apoteke-drogerije": "Apoteke & Drogerije",
 };
 
-function SortableCard({ item, onRemove }: { item: RjesenjaItem; onRemove: (id: string) => void }) {
+type Tab = "hero" | "zone" | "realizacije" | "cta" | "proizvodi";
+
+// ── Sortable product card ──────────────────────────────────────────────────
+function SortablePCard({ item, onRemove }: { item: RjesenjaItem; onRemove: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const img = (() => { try { return JSON.parse(item.product.images)[0]; } catch { return null; } })();
-
   return (
     <div ref={setNodeRef} style={{
       transform: CSS.Transform.toString(transform), transition,
       opacity: isDragging ? 0.5 : 1,
       background: "#fff", borderRadius: 10, border: "1px solid #E2E8ED",
       overflow: "hidden", display: "flex", flexDirection: "column",
-      boxShadow: isDragging ? "0 8px 24px rgba(11,29,51,0.15)" : "none",
-      cursor: "grab",
     }}>
-      <div {...attributes} {...listeners} style={{ height: 110, background: "#F8FAFB", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-        {img ? (
-          <img src={img} alt={item.product.title} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 10 }} />
-        ) : (
-          <span style={{ fontSize: 28, opacity: 0.2 }}>📦</span>
-        )}
-        <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(11,29,51,0.5)", borderRadius: 4, padding: "2px 6px", color: "#fff", fontSize: 11 }}>
-          ⠿ Prevuci
-        </div>
+      <div {...attributes} {...listeners} style={{ height: 100, background: "#F8FAFB", cursor: "grab", position: "relative", overflow: "hidden" }}>
+        {img && <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 8 }} />}
+        <div style={{ position: "absolute", top: 5, left: 5, background: "rgba(11,29,51,0.5)", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 4 }}>⠿</div>
       </div>
-      <div style={{ padding: "10px 12px", flex: 1 }}>
-        <div style={{ fontSize: 10, color: "#0F766E", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>
-          {item.product.category.name}
-        </div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#0B1D33", lineHeight: 1.3 }}>{item.product.title}</div>
-        {item.product.series && <div style={{ fontSize: 11, color: "#6B7B8A", marginTop: 2 }}>{item.product.series}</div>}
+      <div style={{ padding: "8px 10px", flex: 1 }}>
+        <div style={{ fontSize: 10, color: "#0F766E", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{item.product.category.name}</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "#0B1D33", lineHeight: 1.3, marginTop: 2 }}>{item.product.title}</div>
+        {item.product.series && <div style={{ fontSize: 11, color: "#6B7B8A" }}>{item.product.series}</div>}
       </div>
-      <div style={{ padding: "8px 12px", borderTop: "1px solid #F1F5F7" }}>
-        <button onClick={() => onRemove(item.id)} style={{
-          width: "100%", padding: "5px", background: "#FEF2F2", color: "#DC2626",
-          border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 500, fontFamily: "'Satoshi', sans-serif"
-        }}>Ukloni</button>
+      <div style={{ padding: "6px 10px", borderTop: "1px solid #F1F5F7" }}>
+        <button onClick={() => onRemove(item.id)} style={{ width: "100%", padding: "4px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 5, cursor: "pointer", fontSize: 11, fontFamily: "'Satoshi', sans-serif" }}>Ukloni</button>
       </div>
     </div>
   );
 }
 
+// ── Main component ─────────────────────────────────────────────────────────
 export default function RjesenjaEditor() {
   const { slug } = useParams<{ slug: string }>();
+  const [tab, setTab] = useState<Tab>("hero");
+  const [hero, setHero] = useState<Hero | null>(null);
+  const [zones, setZones] = useState<Zones | null>(null);
+  const [realizacije, setRealizacije] = useState<Realizacije | null>(null);
+  const [cta, setCta] = useState<Cta | null>(null);
   const [items, setItems] = useState<RjesenjaItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [search, setSearch] = useState("");
-  const [catFilter, setCatFilter] = useState("all");
-  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [prodSearch, setProdSearch] = useState("");
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState("");
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const load = useCallback(async () => {
-    const [rjItems, prods, cats] = await Promise.all([
+    const [settings, rjItems, prods] = await Promise.all([
+      fetch("/api/settings").then(r => r.json()),
       fetch(`/api/rjesenja-items?slug=${slug}`).then(r => r.json()),
       fetch("/api/products").then(r => r.json()),
-      fetch("/api/products/categories").then(r => r.json()),
     ]);
+    try { setHero(JSON.parse(settings[`rjesenja_${slug}_hero`])); } catch {}
+    try { setZones(JSON.parse(settings[`rjesenja_${slug}_zones`])); } catch {}
+    try { setRealizacije(JSON.parse(settings[`rjesenja_${slug}_realizacije`])); } catch {}
+    try { setCta(JSON.parse(settings[`rjesenja_${slug}_cta`])); } catch {}
     setItems(rjItems);
     setAllProducts(prods);
-    setCategories(cats);
   }, [slug]);
 
   useEffect(() => { load(); }, [load]);
 
-  async function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
+  async function saveSetting(section: string, value: unknown) {
+    setSaving(true);
+    await fetch("/api/settings", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [`rjesenja_${slug}_${section}`]: JSON.stringify(value) }),
+    });
+    setSaving(false); setSaved(section);
+    setTimeout(() => setSaved(""), 2000);
+  }
+
+  // ── Products: group by category ──────────────────────────────────────────
+  const grouped = items.reduce<Record<string, { name: string; items: RjesenjaItem[] }>>((acc, item) => {
+    const catId = item.product.category.name;
+    if (!acc[catId]) acc[catId] = { name: catId, items: [] };
+    acc[catId].items.push(item);
+    return acc;
+  }, {});
+  const groups = Object.values(grouped);
+
+  async function handleDragEnd(e: DragEndEvent, groupItems: RjesenjaItem[]) {
+    const { active, over } = e;
     if (!over || active.id === over.id) return;
-
-    const oldIndex = items.findIndex(i => i.id === active.id);
-    const newIndex = items.findIndex(i => i.id === over.id);
-    const reordered = arrayMove(items, oldIndex, newIndex);
-    setItems(reordered);
-
+    const oi = groupItems.findIndex(i => i.id === active.id);
+    const ni = groupItems.findIndex(i => i.id === over.id);
+    const reordered = arrayMove(groupItems, oi, ni);
+    // Merge back into items
+    const ids = new Set(reordered.map(i => i.id));
+    const newItems = [...items.filter(i => !ids.has(i.id)), ...reordered];
+    setItems(newItems);
     await fetch("/api/rjesenja-items", {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: reordered.map((it, idx) => ({ id: it.id, order: idx })) }),
@@ -106,15 +125,12 @@ export default function RjesenjaEditor() {
   }
 
   async function addProduct(productId: string) {
-    const already = items.find(i => i.product.id === productId);
-    if (already) return;
+    if (items.find(i => i.product.id === productId)) return;
     await fetch("/api/rjesenja-items", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rjesenjaSlug: slug, productId }),
     });
     await load();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   }
 
   async function removeItem(id: string) {
@@ -126,103 +142,241 @@ export default function RjesenjaEditor() {
   }
 
   const assignedIds = new Set(items.map(i => i.product.id));
-  const available = allProducts
-    .filter(p => !assignedIds.has(p.id))
-    .filter(p => catFilter === "all" || p.category.name === catFilter)
-    .filter(p => !search || p.title.toLowerCase().includes(search.toLowerCase()));
+  const available = allProducts.filter(p => !assignedIds.has(p.id) && (!prodSearch || p.title.toLowerCase().includes(prodSearch.toLowerCase())));
 
-  const uniqueCats = Array.from(new Set(allProducts.map(p => p.category.name)));
+  const TABS: { key: Tab; label: string; icon: string }[] = [
+    { key: "hero", label: "Hero", icon: "🖼" },
+    { key: "zone", label: "Zone", icon: "📋" },
+    { key: "realizacije", label: "Realizacije", icon: "🏪" },
+    { key: "cta", label: "CTA", icon: "📣" },
+    { key: "proizvodi", label: `Proizvodi (${items.length})`, icon: "📦" },
+  ];
+
+  if (!hero || !zones || !realizacije || !cta) return <div style={{ padding: 40, color: "#6B7B8A" }}>Učitavanje...</div>;
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-          <a href="/admin" style={{ color: "#6B7B8A", fontSize: 13, textDecoration: "none" }}>Admin</a>
-          <span style={{ color: "#6B7B8A" }}>›</span>
-          <span style={{ fontSize: 13, color: "#0B1D33", fontWeight: 500 }}>
-            Rješenja — {RJESENJA_LABELS[slug] ?? slug}
-          </span>
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, color: "#6B7B8A", marginBottom: 4 }}>
+          <a href="/admin" style={{ color: "#6B7B8A", textDecoration: "none" }}>Admin</a> › Rješenja
         </div>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>
-          Proizvodi na stranici: {RJESENJA_LABELS[slug] ?? slug}
+          {LABELS[slug] ?? slug}
         </h1>
         <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>
-          Prevlačenjem kartica mijenjate redoslijed. Prikazano na sajtu u realnom vremenu.
+          Uređivač svake sekcije stranice — identično frontendu
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 24, alignItems: "start" }}>
-        {/* Left: current products with DnD */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <strong style={{ fontSize: 15, color: "#0B1D33" }}>Dodani proizvodi ({items.length})</strong>
-            {saved && <span style={{ fontSize: 13, color: "#16A34A", fontWeight: 500 }}>✓ Sačuvano</span>}
-          </div>
-
-          {items.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", background: "#F8FAFB", borderRadius: 12, border: "1.5px dashed #E2E8ED", color: "#6B7B8A" }}>
-              Nema dodanih proizvoda. Dodajte ih iz panela desno.
-            </div>
-          ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={items.map(i => i.id)} strategy={rectSortingStrategy}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
-                  {items.map(item => (
-                    <SortableCard key={item.id} item={item} onRemove={removeItem} />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          )}
-        </div>
-
-        {/* Right: product picker */}
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden", position: "sticky", top: 80 }}>
-          <div style={{ padding: "16px 18px", borderBottom: "1px solid #E2E8ED" }}>
-            <strong style={{ fontSize: 14, color: "#0B1D33" }}>Dodaj proizvod</strong>
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Pretraži..." style={{ ...inp, marginTop: 10 }} />
-            <select value={catFilter} onChange={e => setCatFilter(e.target.value)} style={{ ...inp, marginTop: 8 }}>
-              <option value="all">Sve kategorije</option>
-              {uniqueCats.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-
-          <div style={{ maxHeight: 500, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-            {available.length === 0 && (
-              <div style={{ padding: 20, textAlign: "center", color: "#6B7B8A", fontSize: 13 }}>
-                {allProducts.length === items.length ? "Svi proizvodi su dodani." : "Nema rezultata."}
-              </div>
-            )}
-            {available.map(p => {
-              const img = (() => { try { return JSON.parse(p.images)[0]; } catch { return null; } })();
-              return (
-                <button key={p.id} onClick={() => addProduct(p.id)} style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
-                  border: "1.5px solid #E2E8ED", borderRadius: 8, background: "#fff",
-                  cursor: "pointer", textAlign: "left", transition: "border-color 0.2s, background 0.2s",
-                  fontFamily: "'Satoshi', sans-serif",
-                }}>
-                  <div style={{ width: 40, height: 40, background: "#F8FAFB", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
-                    {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ opacity: 0.3 }}>📦</span>}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#0B1D33", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</div>
-                    <div style={{ fontSize: 11, color: "#6B7B8A" }}>{p.category.name}</div>
-                  </div>
-                  <span style={{ color: "#0F766E", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>+</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 24, borderBottom: "1px solid #E2E8ED", paddingBottom: 0 }}>
+        {TABS.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)} style={{
+            padding: "10px 18px", border: "none", background: "none", cursor: "pointer",
+            fontSize: 14, fontFamily: "'Satoshi', sans-serif", fontWeight: tab === t.key ? 700 : 400,
+            color: tab === t.key ? "#0F766E" : "#6B7B8A",
+            borderBottom: tab === t.key ? "2.5px solid #0F766E" : "2.5px solid transparent",
+            marginBottom: -1,
+          }}>{t.icon} {t.label}</button>
+        ))}
+        <a href={`/rjesenja/${slug}`} target="_blank" style={{ marginLeft: "auto", fontSize: 13, color: "#0F766E", textDecoration: "none", display: "flex", alignItems: "center", gap: 4, paddingBottom: 10 }}>
+          Pogledaj stranicu →
+        </a>
       </div>
+
+      {/* ── TAB: HERO ── */}
+      {tab === "hero" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 720 }}>
+          <Card title="Hero sekcija" saved={saved === "hero"}>
+            <Row label="Eyebrow badge"><TI value={hero.eyebrow} set={v => setHero({ ...hero, eyebrow: v })} /></Row>
+            <Row label="Naslov H1"><TI value={hero.h1} set={v => setHero({ ...hero, h1: v })} /></Row>
+            <Row label="H1 istaknuti tekst (teal)"><TI value={hero.h1Highlight} set={v => setHero({ ...hero, h1Highlight: v })} /></Row>
+            <Row label="Lead paragraf"><TA value={hero.lead} set={v => setHero({ ...hero, lead: v })} /></Row>
+            <Row label="Pozadinska slika (URL)">
+              <TI value={hero.heroBg} set={v => setHero({ ...hero, heroBg: v })} />
+              {hero.heroBg && <img src={hero.heroBg} alt="" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginTop: 8 }} />}
+            </Row>
+            <Row label="Statistike (3)">
+              {hero.stats.map((s, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <TI placeholder="Broj/tekst" value={s.num} set={v => { const st = [...hero.stats]; st[i] = { ...st[i], num: v }; setHero({ ...hero, stats: st }); }} />
+                  <TI placeholder="Labela" value={s.label} set={v => { const st = [...hero.stats]; st[i] = { ...st[i], label: v }; setHero({ ...hero, stats: st }); }} />
+                </div>
+              ))}
+            </Row>
+            <Row label="Ghost dugme (Pogledajte realizacije)">
+              <div style={{ display: "flex", gap: 8 }}>
+                <TI placeholder="Tekst" value={hero.ghostLabel} set={v => setHero({ ...hero, ghostLabel: v })} />
+                <TI placeholder="URL" value={hero.ghostHref} set={v => setHero({ ...hero, ghostHref: v })} />
+              </div>
+            </Row>
+            <Btn onClick={() => saveSetting("hero", hero)} saving={saving} />
+          </Card>
+        </div>
+      )}
+
+      {/* ── TAB: ZONE ── */}
+      {tab === "zone" && (
+        <div style={{ maxWidth: 720 }}>
+          <Card title="Sekcija — Šta opremamo" saved={saved === "zones"}>
+            <Row label="Badge tekst"><TI value={zones.badge} set={v => setZones({ ...zones, badge: v })} /></Row>
+            <Row label="Naslov H2"><TI value={zones.h2} set={v => setZones({ ...zones, h2: v })} /></Row>
+            <Row label="Opis ispod naslova"><TI value={zones.desc} set={v => setZones({ ...zones, desc: v })} /></Row>
+            <div style={{ marginTop: 8 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 10 }}>Zone ({zones.items.length})</label>
+              {zones.items.map((z, i) => (
+                <div key={i} style={{ padding: "14px 16px", border: "1px solid #E2E8ED", borderRadius: 10, marginBottom: 10, background: "#F8FAFB", display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <div style={{ width: 28, height: 28, background: "#C7F1E6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#0F766E" }}>✓</div>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <TI placeholder="Naziv zone" value={z.title} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], title: v }; setZones({ ...zones, items: ni }); }} />
+                    <TA placeholder="Opis" value={z.desc} rows={2} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], desc: v }; setZones({ ...zones, items: ni }); }} />
+                  </div>
+                  <button onClick={() => setZones({ ...zones, items: zones.items.filter((_, idx) => idx !== i) })}
+                    style={{ padding: "6px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>✕</button>
+                </div>
+              ))}
+              <button onClick={() => setZones({ ...zones, items: [...zones.items, { title: "", desc: "" }] })}
+                style={{ padding: "8px 16px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
+                + Dodaj zonu
+              </button>
+            </div>
+            <Btn onClick={() => saveSetting("zones", zones)} saving={saving} />
+          </Card>
+        </div>
+      )}
+
+      {/* ── TAB: REALIZACIJE ── */}
+      {tab === "realizacije" && (
+        <div style={{ maxWidth: 720 }}>
+          <Card title="Realizacije slider" saved={saved === "realizacije"}>
+            <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 16px" }}>Slike u slideru ispod proizvoda. Prva slika = početna.</p>
+            {realizacije.items.map((r, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "center", padding: "10px 12px", border: "1px solid #E2E8ED", borderRadius: 10, background: "#F8FAFB" }}>
+                {r.img && <img src={r.img} alt="" style={{ width: 64, height: 44, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />}
+                <div style={{ flex: 1, display: "flex", gap: 8 }}>
+                  <TI placeholder="URL slike" value={r.img} set={v => { const ni = [...realizacije.items]; ni[i] = { ...ni[i], img: v }; setRealizacije({ ...realizacije, items: ni }); }} />
+                  <TI placeholder="Labela (slider naslov)" value={r.label} set={v => { const ni = [...realizacije.items]; ni[i] = { ...ni[i], label: v }; setRealizacije({ ...realizacije, items: ni }); }} />
+                </div>
+                <button onClick={() => setRealizacije({ ...realizacije, items: realizacije.items.filter((_, idx) => idx !== i) })}
+                  style={{ padding: "6px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>✕</button>
+              </div>
+            ))}
+            <button onClick={() => setRealizacije({ ...realizacije, items: [...realizacije.items, { img: "", label: "" }] })}
+              style={{ padding: "8px 16px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif", marginBottom: 8 }}>
+              + Dodaj sliku
+            </button>
+            <br />
+            <Btn onClick={() => saveSetting("realizacije", realizacije)} saving={saving} />
+          </Card>
+        </div>
+      )}
+
+      {/* ── TAB: CTA ── */}
+      {tab === "cta" && (
+        <div style={{ maxWidth: 720 }}>
+          <Card title="Završni CTA banner" saved={saved === "cta"}>
+            <Row label="Naslov"><TI value={cta.h2} set={v => setCta({ ...cta, h2: v })} /></Row>
+            <Row label="Opis"><TA value={cta.p} set={v => setCta({ ...cta, p: v })} rows={2} /></Row>
+            <Btn onClick={() => saveSetting("cta", cta)} saving={saving} />
+          </Card>
+        </div>
+      )}
+
+      {/* ── TAB: PROIZVODI ── */}
+      {tab === "proizvodi" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24, alignItems: "start" }}>
+          {/* Left: grouped products */}
+          <div>
+            <div style={{ marginBottom: 20 }}>
+              <strong style={{ fontSize: 15, color: "#0B1D33" }}>Dodani proizvodi ({items.length})</strong>
+              <p style={{ fontSize: 13, color: "#6B7B8A", margin: "4px 0 0" }}>Grupisani po kategoriji — kao na frontendu. Prevuci za promjenu redoslijeda unutar grupe.</p>
+            </div>
+
+            {groups.length === 0 ? (
+              <div style={{ padding: 40, textAlign: "center", background: "#F8FAFB", borderRadius: 12, border: "1.5px dashed #E2E8ED", color: "#6B7B8A" }}>
+                Nema dodanih proizvoda. Dodajte ih iz panela desno.
+              </div>
+            ) : (
+              groups.map(group => (
+                <div key={group.name} style={{ marginBottom: 28 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <div>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#0B1D33" }}>{group.name}</span>
+                      <span style={{ fontSize: 12, color: "#6B7B8A", marginLeft: 8 }}>{group.items.length} proizvoda</span>
+                    </div>
+                  </div>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={e => handleDragEnd(e, group.items)}>
+                    <SortableContext items={group.items.map(i => i.id)} strategy={rectSortingStrategy}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+                        {group.items.map(item => (
+                          <SortablePCard key={item.id} item={item} onRemove={removeItem} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Right: product picker */}
+          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden", position: "sticky", top: 80 }}>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid #E2E8ED" }}>
+              <strong style={{ fontSize: 13, color: "#0B1D33" }}>Dodaj proizvod</strong>
+              <input value={prodSearch} onChange={e => setProdSearch(e.target.value)}
+                placeholder="Pretraži..." style={{ display: "block", width: "100%", marginTop: 8, padding: "8px 10px", border: "1.5px solid #E2E8ED", borderRadius: 7, fontSize: 12, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box" }} />
+            </div>
+            <div style={{ maxHeight: 480, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 5 }}>
+              {available.slice(0, 30).map(prod => {
+                const img = (() => { try { return JSON.parse(prod.images)[0]; } catch { return null; } })();
+                return (
+                  <button key={prod.id} onClick={() => addProduct(prod.id)} style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "7px 8px",
+                    border: "1px solid #E2E8ED", borderRadius: 7, background: "#fff",
+                    cursor: "pointer", textAlign: "left", fontFamily: "'Satoshi', sans-serif",
+                  }}>
+                    <div style={{ width: 36, height: 36, background: "#F8FAFB", borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                      {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ opacity: 0.3 }}>📦</span>}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prod.title}</div>
+                      <div style={{ fontSize: 10, color: "#6B7B8A" }}>{prod.category.name}</div>
+                    </div>
+                    <span style={{ color: "#0F766E", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>+</span>
+                  </button>
+                );
+              })}
+              {available.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "#6B7B8A", fontSize: 12 }}>Nema rezultata.</div>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-const inp: React.CSSProperties = {
-  width: "100%", padding: "9px 12px", border: "1.5px solid #E2E8ED", borderRadius: 8,
-  fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none",
-  boxSizing: "border-box", color: "#111827", background: "#fff", display: "block"
-};
+// ── Shared sub-components ──────────────────────────────────────────────────
+function Card({ title, children, saved }: { title: string; children: React.ReactNode; saved: boolean }) {
+  return (
+    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden" }}>
+      <div style={{ padding: "16px 24px", borderBottom: "1px solid #E2E8ED", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#F8FAFB" }}>
+        <strong style={{ fontSize: 15, color: "#0B1D33" }}>{title}</strong>
+        {saved && <span style={{ fontSize: 13, color: "#16A34A", fontWeight: 500 }}>✓ Sačuvano</span>}
+      </div>
+      <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>
+    </div>
+  );
+}
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>{label}</label>{children}</div>;
+}
+function TI({ value, set, placeholder }: { value: string; set: (v: string) => void; placeholder?: string }) {
+  return <input value={value} onChange={e => set(e.target.value)} placeholder={placeholder} style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #E2E8ED", borderRadius: 8, fontSize: 14, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box", color: "#111827", background: "#fff", display: "block" }} />;
+}
+function TA({ value, set, rows = 3, placeholder }: { value: string; set: (v: string) => void; rows?: number; placeholder?: string }) {
+  return <textarea value={value} onChange={e => set(e.target.value)} rows={rows} placeholder={placeholder} style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #E2E8ED", borderRadius: 8, fontSize: 14, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box", color: "#111827", background: "#fff", display: "block", resize: "vertical" }} />;
+}
+function Btn({ onClick, saving }: { onClick: () => void; saving: boolean }) {
+  return <button onClick={onClick} disabled={saving} style={{ padding: "10px 24px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'Satoshi', sans-serif", alignSelf: "flex-start" }}>{saving ? "Čuvanje..." : "Sačuvaj sekciju"}</button>;
+}
