@@ -2,15 +2,33 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import type { MegaRjesenjaItem, MegaProizvodiItem } from "./SiteLayout";
 
-export default function Header({ currentPage = "" }: { currentPage?: string }) {
+const RJESENJA_ICONS: Record<string, React.ReactNode> = {
+  supermarketi: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg>,
+  "mesnice-ribarnice": <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 4h16v6H4z"/><path d="M6 10v10"/><path d="M18 10v10"/><path d="M6 15h12"/></svg>,
+  horeca: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 2v7a3 3 0 006 0V2"/><path d="M9 2v20"/><path d="M16 2c-1.5 1.5-2 4-2 6s.5 4 2 5v9"/></svg>,
+  pekare: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 13a8 8 0 0116 0v3H4z"/><path d="M2 20h20"/></svg>,
+  "apoteke-drogerije": <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 7v10M7 12h10"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg>,
+};
+
+const DEFAULT_ICON = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>;
+
+export default function Header({
+  currentPage = "",
+  megaRjesenja = [],
+  megaProizvodi = [],
+}: {
+  currentPage?: string;
+  megaRjesenja?: MegaRjesenjaItem[];
+  megaProizvodi?: MegaProizvodiItem[];
+}) {
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const header = headerRef.current;
     if (!header) return;
 
-    // Sticky scroll
     const onScroll = () => {
       if (window.scrollY > 50) header.classList.add("scrolled");
       else header.classList.remove("scrolled");
@@ -39,7 +57,6 @@ export default function Header({ currentPage = "" }: { currentPage?: string }) {
         if (imgEl && img) imgEl.style.backgroundImage = `url('${img}')`;
         if (titleEl && title) titleEl.textContent = title;
         if (descEl && desc) descEl.textContent = desc;
-        feature.href = el.closest("a")?.href ?? "#";
         header.querySelectorAll(".mega-item").forEach(i => i.classList.remove("is-active"));
         el.classList.add("is-active");
       });
@@ -57,7 +74,9 @@ export default function Header({ currentPage = "" }: { currentPage?: string }) {
     }
 
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [megaRjesenja]);
+
+  const firstRjesenja = megaRjesenja[0];
 
   return (
     <>
@@ -98,7 +117,7 @@ export default function Header({ currentPage = "" }: { currentPage?: string }) {
 
           <nav className="main-nav" aria-label="Glavna navigacija">
             <ul className="nav-list">
-              {/* RJEŠENJA */}
+              {/* RJEŠENJA — dinamički iz DB */}
               <li className="nav-item has-mega" data-mega="rjesenja">
                 <a href="#" className="nav-link">
                   Rješenja <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -107,48 +126,43 @@ export default function Header({ currentPage = "" }: { currentPage?: string }) {
                   <div className="mega-inner">
                     <div className="mega-list">
                       <span className="mega-eyebrow">Rješenja po industriji</span>
-                      {[
-                        { href: "/rjesenja/supermarketi", img: "/assets/images/megamenu/supermarketi.jpg", title: "Supermarketi & Maloprodaja", desc: "Kompletno opremanje objekata od 200 do 5.000 m² — rashlada, checkout, police i kolica.", sub: "Rashlada · Checkout · Police · Kolica", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg> },
-                        { href: "/rjesenja/mesnice-ribarnice", img: "/assets/images/megamenu/mesnice.jpg", title: "Mesnice & Ribarnice", desc: "Rashladne vitrine, inox oprema i radne površine za svjež program.", sub: "Vitrine · Inox · Radne površine", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 4h16v6H4z"/><path d="M6 10v10"/><path d="M18 10v10"/><path d="M6 15h12"/></svg> },
-                        { href: "/rjesenja/horeca", img: "/assets/images/megamenu/horeca.jpg", title: "HoReCa & Ugostiteljstvo", desc: "Profesionalne kuhinje, šankovi i rashladni sistemi za restorane i hotele.", sub: "Kuhinje · Šankovi · Rashlada", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 2v7a3 3 0 006 0V2"/><path d="M9 2v20"/><path d="M16 2c-1.5 1.5-2 4-2 6s.5 4 2 5v9"/></svg> },
-                        { href: "/rjesenja/pekare", img: "/assets/images/megamenu/pekare-v2.jpg", title: "Pekare & Poslastičarnice", desc: "Vitrine za pekarski i poslastičarski program uz toplu prezentaciju.", sub: "Tople vitrine · Izlozi · Police", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 13a8 8 0 0116 0v3H4z"/><path d="M2 20h20"/></svg> },
-                        { href: "/rjesenja/apoteke-drogerije", img: "/assets/images/megamenu/apoteke.jpg", title: "Apoteke & Drogerije", desc: "Polični sistemi, pultovi i rasvjeta za uredan i pregledan prostor.", sub: "Police · Pultovi · Rasvjeta", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 7v10M7 12h10"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg> },
-                      ].map((item) => (
-                        <a key={item.href} href={item.href} className={`mega-item${currentPage === item.href ? " is-active" : ""}`} data-img={item.img} data-title={item.title} data-desc={item.desc}>
-                          <span className="mega-item-icon">{item.icon}</span>
+                      {megaRjesenja.map((item) => (
+                        <a
+                          key={item.slug}
+                          href={`/rjesenja/${item.slug}`}
+                          className={`mega-item${currentPage === `/rjesenja/${item.slug}` ? " is-active" : ""}`}
+                          data-img={item.img}
+                          data-title={item.title}
+                          data-desc={item.desc}
+                        >
+                          <span className="mega-item-icon">{RJESENJA_ICONS[item.slug] ?? DEFAULT_ICON}</span>
                           <span className="mega-item-text"><strong>{item.title}</strong><small>{item.sub}</small></span>
                         </a>
                       ))}
                     </div>
-                    <a href="/rjesenja/supermarketi" className="mega-feature" id="megaFeatureRjesenja">
-                      <span className="mega-feature-img" style={{ backgroundImage: "url('/assets/images/megamenu/supermarketi.jpg')" }}></span>
-                      <span className="mega-feature-body">
-                        <strong className="mega-feature-title">Supermarketi & Maloprodaja</strong>
-                        <span className="mega-feature-desc">Kompletno opremanje objekata od 200 do 5.000 m² — rashlada, checkout, police i kolica.</span>
-                        <span className="mega-feature-cta">Pogledajte rješenje <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
-                      </span>
-                    </a>
+                    {firstRjesenja && (
+                      <a href={`/rjesenja/${firstRjesenja.slug}`} className="mega-feature" id="megaFeatureRjesenja">
+                        <span className="mega-feature-img" style={{ backgroundImage: `url('${firstRjesenja.img}')` }}></span>
+                        <span className="mega-feature-body">
+                          <strong className="mega-feature-title">{firstRjesenja.title}</strong>
+                          <span className="mega-feature-desc">{firstRjesenja.desc}</span>
+                          <span className="mega-feature-cta">Pogledajte rješenje <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+                        </span>
+                      </a>
+                    )}
                   </div>
                 </div>
               </li>
 
-              {/* PROIZVODI */}
+              {/* PROIZVODI — dinamički iz DB */}
               <li className="nav-item has-mega" data-mega="proizvodi">
                 <a href="#" className="nav-link">
                   Proizvodi <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </a>
                 <div className="mega-menu mega-menu--proizvodi">
                   <div className="mega-grid">
-                    {[
-                      { href: "/proizvodi/rashladne-vitrine", img: "/assets/images/megamenu/thumb-rashladna.jpg", title: "Rashladne vitrine", sub: "CURVE · CUBE · zakrivljeno i ravno staklo" },
-                      { href: "/proizvodi/frizideri-komore", img: "/assets/images/megamenu/thumb-frizideri.jpg", title: "Frižideri & komore", sub: "Uspravni · staklena vrata · hladne komore" },
-                      { href: "/proizvodi/checkout-kase", img: "/assets/images/megamenu/thumb-kasa.jpg", title: "Checkout & Kasa pultovi", sub: "Standard · Premium · SmartPos · Netris" },
-                      { href: "/proizvodi/policni-sistemi", img: "/assets/images/megamenu/thumb-polica.jpg", title: "Polični sistemi", sub: "Gondole · pusheri · cjenovne šine · LED" },
-                      { href: "/proizvodi/kolica-korpe", img: "/assets/images/megamenu/thumb-kolica.jpg", title: "Kolica & Korpe", sub: "Samba · žičana · korpe · trolley" },
-                      { href: "/proizvodi/inox-kuhinja", img: "/assets/images/megamenu/thumb-inox.jpg", title: "Inox & Kuhinjska oprema", sub: "Radni stolovi · sudopere · termička linija" },
-                      { href: "/proizvodi/usmjeravanje", img: "/assets/images/megamenu/thumb-usmjeravanje.jpg", title: "Usmjeravanje kupaca", sub: "Ulazne rampe · turniketi · barijere · ITAB" },
-                    ].map((item) => (
-                      <a key={item.href} href={item.href} className="mega-card">
+                    {megaProizvodi.map((item) => (
+                      <a key={item.slug} href={`/proizvodi/${item.slug}`} className="mega-card">
                         <span className="mega-card-thumb"><img src={item.img} alt={item.title} loading="lazy" decoding="async" /></span>
                         <span className="mega-card-text"><strong>{item.title}</strong><small>{item.sub}</small></span>
                       </a>
