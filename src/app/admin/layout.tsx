@@ -5,8 +5,7 @@ import { signOut } from "next-auth/react";
 
 const nav = [
   { href: "/admin", label: "Dashboard", icon: "⬛" },
-  { href: "/admin/menu", label: "Meni", icon: "☰" },
-  { href: "/admin/mega-meni", label: "Mega meni", icon: "🔽" },
+  { href: "/admin/navigacija", label: "Navigacija", icon: "🧭" },
   { href: "/admin/products", label: "Proizvodi", icon: "📦" },
   { href: "/admin/rjesenja", label: "Rješenja stranice", icon: "🏪" },
   { href: "/admin/realizacije", label: "Realizacije", icon: "🏆" },
