@@ -146,7 +146,7 @@ export default function Header({ currentPage = "" }: { currentPage?: string }) {
                       { href: "/proizvodi/policni-sistemi", img: "/assets/images/megamenu/thumb-polica.jpg", title: "Polični sistemi", sub: "Gondole · pusheri · cjenovne šine · LED" },
                       { href: "/proizvodi/kolica-korpe", img: "/assets/images/megamenu/thumb-kolica.jpg", title: "Kolica & Korpe", sub: "Samba · žičana · korpe · trolley" },
                       { href: "/proizvodi/inox-kuhinja", img: "/assets/images/megamenu/thumb-inox.jpg", title: "Inox & Kuhinjska oprema", sub: "Radni stolovi · sudopere · termička linija" },
-                      { href: "/proizvodi/sistemi-usmjeravanje", img: "/assets/images/megamenu/thumb-usmjeravanje.jpg", title: "Usmjeravanje kupaca", sub: "Ulazne rampe · turniketi · barijere · ITAB" },
+                      { href: "/proizvodi/usmjeravanje", img: "/assets/images/megamenu/thumb-usmjeravanje.jpg", title: "Usmjeravanje kupaca", sub: "Ulazne rampe · turniketi · barijere · ITAB" },
                     ].map((item) => (
                       <a key={item.href} href={item.href} className="mega-card">
                         <span className="mega-card-thumb"><img src={item.img} alt={item.title} loading="lazy" decoding="async" /></span>
