@@ -19,7 +19,7 @@ type RealizItem = { img: string; label: string };
 type Realizacije = { items: RealizItem[] };
 type Cta = { h2: string; p: string };
 type Product = { id: string; title: string; series?: string; images: string; category: { id: string; name: string; slug: string } };
-type RjesenjaItem = { id: string; order: number; product: Product };
+type RjesenjaItem = { id: string; order: number; zoneLabel?: string | null; product: Product };
 type RjesenjaPage = { slug: string; label: string; bg: string };
 type ProductCategory = { id: string; name: string; slug: string };
 
@@ -270,31 +270,145 @@ export default function RjesenjaEditor() {
 
       {/* ── TAB: ZONE ── */}
       {tab === "zone" && (
-        <div style={{ maxWidth: 720 }}>
-          <Card title="Sekcija — Šta opremamo" saved={saved === "zones"}>
-            <Row label="Badge tekst"><TI value={zones.badge} set={v => setZones({ ...zones, badge: v })} /></Row>
-            <Row label="Naslov H2"><TI value={zones.h2} set={v => setZones({ ...zones, h2: v })} /></Row>
-            <Row label="Opis ispod naslova"><TI value={zones.desc} set={v => setZones({ ...zones, desc: v })} /></Row>
-            <div style={{ marginTop: 8 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 10 }}>Zone ({zones.items.length})</label>
-              {zones.items.map((z, i) => (
-                <div key={i} style={{ padding: "14px 16px", border: "1px solid #E2E8ED", borderRadius: 10, marginBottom: 10, background: "#F8FAFB", display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  <div style={{ width: 28, height: 28, background: "#C7F1E6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#0F766E" }}>✓</div>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <TI placeholder="Naziv zone" value={z.title} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], title: v }; setZones({ ...zones, items: ni }); }} />
-                    <TA placeholder="Opis" value={z.desc} rows={2} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], desc: v }; setZones({ ...zones, items: ni }); }} />
-                  </div>
-                  <button onClick={() => setZones({ ...zones, items: zones.items.filter((_, idx) => idx !== i) })}
-                    style={{ padding: "6px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>✕</button>
-                </div>
-              ))}
-              <button onClick={() => setZones({ ...zones, items: [...zones.items, { title: "", desc: "" }] })}
-                style={{ padding: "8px 16px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
-                + Dodaj zonu
-              </button>
+        <div>
+          {/* Section header settings */}
+          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", marginBottom: 20, overflow: "hidden" }}>
+            <div style={{ padding: "14px 24px", borderBottom: "1px solid #E2E8ED", background: "#F8FAFB", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <strong style={{ fontSize: 14, color: "#0B1D33" }}>Naslov sekcije</strong>
+              {saved === "zones" && <span style={{ fontSize: 13, color: "#16A34A", fontWeight: 500 }}>✓ Sačuvano</span>}
             </div>
+            <div style={{ padding: "16px 24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div><label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 4 }}>Badge</label><TI value={zones.badge} set={v => setZones({ ...zones, badge: v })} /></div>
+              <div><label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 4 }}>Naslov H2</label><TI value={zones.h2} set={v => setZones({ ...zones, h2: v })} /></div>
+              <div><label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 4 }}>Opis</label><TI value={zones.desc} set={v => setZones({ ...zones, desc: v })} /></div>
+            </div>
+          </div>
+
+          {/* Zone cards with inline product management */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {zones.items.map((z, i) => {
+              const zoneItems = items.filter(it => it.zoneLabel === z.title);
+              const notInZone = allProducts.filter(p =>
+                !items.find(it => it.product.id === p.id && it.zoneLabel === z.title) &&
+                (!prodSearch || p.title.toLowerCase().includes(prodSearch.toLowerCase()))
+              );
+
+              return (
+                <div key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden" }}>
+                  {/* Zone header */}
+                  <div style={{ padding: "12px 16px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", gap: 10, alignItems: "center" }}>
+                    <div style={{ width: 28, height: 28, background: "#C7F1E6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#0F766E" }}>✓</div>
+                    <div style={{ flex: 1, display: "flex", gap: 10 }}>
+                      <TI placeholder="Naziv zone *" value={z.title} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], title: v }; setZones({ ...zones, items: ni }); }} />
+                      <TI placeholder="Kratki opis zone" value={z.desc} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], desc: v }; setZones({ ...zones, items: ni }); }} />
+                    </div>
+                    <button onClick={() => setZones({ ...zones, items: zones.items.filter((_, idx) => idx !== i) })}
+                      style={{ padding: "5px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>✕</button>
+                  </div>
+
+                  <div style={{ padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
+                    {/* Assigned products */}
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        Dodani proizvodi ({zoneItems.length})
+                      </div>
+                      {zoneItems.length === 0 ? (
+                        <div style={{ padding: "16px", background: "#F8FAFB", borderRadius: 8, border: "1.5px dashed #E2E8ED", color: "#9CA3AF", fontSize: 13, textAlign: "center" }}>
+                          Nema dodanih — dodajte iz panela desno
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {zoneItems.map(it => {
+                            const img = (() => { try { return JSON.parse(it.product.images)[0]; } catch { return null; } })();
+                            return (
+                              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: "#F8FAFB", borderRadius: 8, border: "1px solid #E2E8ED" }}>
+                                <div style={{ width: 36, height: 36, background: "#fff", borderRadius: 6, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ opacity: 0.3 }}>📦</span>}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.product.title}</div>
+                                  <div style={{ fontSize: 11, color: "#6B7B8A" }}>{it.product.category.name}</div>
+                                </div>
+                                <button onClick={async () => {
+                                  await fetch(`/api/rjesenja-items`, {
+                                    method: "DELETE", headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ id: it.id }),
+                                  });
+                                  await load();
+                                }} style={{ padding: "4px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, flexShrink: 0 }}>✕</button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product picker for this zone */}
+                    <div style={{ background: "#F8FAFB", borderRadius: 10, border: "1px solid #E2E8ED", overflow: "hidden" }}>
+                      <div style={{ padding: "10px 12px", borderBottom: "1px solid #E2E8ED", background: "#fff" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#0B1D33", marginBottom: 6 }}>Dodaj u "{z.title}"</div>
+                        <input value={prodSearch} onChange={e => setProdSearch(e.target.value)} placeholder="Pretraži..."
+                          style={{ width: "100%", padding: "6px 10px", border: "1.5px solid #E2E8ED", borderRadius: 6, fontSize: 12, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                      </div>
+                      <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+                        {notInZone.slice(0, 20).map(prod => {
+                          const img = (() => { try { return JSON.parse(prod.images)[0]; } catch { return null; } })();
+                          const alreadyOnPage = !!items.find(it => it.product.id === prod.id);
+                          return (
+                            <button key={prod.id} onClick={async () => {
+                              if (alreadyOnPage) {
+                                // Just update zoneLabel on existing item
+                                const existingItem = items.find(it => it.product.id === prod.id);
+                                if (existingItem) {
+                                  await fetch(`/api/rjesenja-items`, {
+                                    method: "PUT", headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ id: existingItem.id, zoneLabel: z.title }),
+                                  });
+                                }
+                              } else {
+                                // Add new item with zone label
+                                await fetch("/api/rjesenja-items", {
+                                  method: "POST", headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ rjesenjaSlug: slug, productId: prod.id, zoneLabel: z.title }),
+                                });
+                              }
+                              await load();
+                            }} style={{
+                              display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
+                              border: "none", borderBottom: "1px solid #F1F5F7", background: "#fff",
+                              cursor: "pointer", textAlign: "left", fontFamily: "'Satoshi', sans-serif",
+                            }}
+                              onMouseEnter={e => (e.currentTarget.style.background = "#F0FDF4")}
+                              onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+                            >
+                              <div style={{ width: 28, height: 28, background: "#F8FAFB", borderRadius: 5, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ opacity: 0.3, fontSize: 10 }}>📦</span>}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prod.title}</div>
+                                <div style={{ fontSize: 10, color: "#6B7B8A" }}>{prod.category.name}</div>
+                              </div>
+                              <span style={{ color: "#0F766E", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>+</span>
+                            </button>
+                          );
+                        })}
+                        {notInZone.length === 0 && <div style={{ padding: 16, textAlign: "center", color: "#9CA3AF", fontSize: 12 }}>Nema rezultata</div>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add zone + save */}
+          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+            <button onClick={() => setZones({ ...zones, items: [...zones.items, { title: "", desc: "" }] })}
+              style={{ padding: "10px 20px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
+              + Dodaj zonu
+            </button>
             <Btn onClick={() => saveSetting("zones", zones)} saving={saving} />
-          </Card>
+          </div>
         </div>
       )}
 

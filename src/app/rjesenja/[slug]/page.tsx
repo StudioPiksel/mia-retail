@@ -56,13 +56,20 @@ export default async function RjesenjaPage({ params }: { params: Promise<{ slug:
     orderBy: { order: "asc" },
   });
 
-  const grouped = rjesenjaItems.reduce<Record<string, { catName: string; catSlug: string; desc: string; products: typeof rjesenjaItems[0]["product"][] }>>((acc, item) => {
-    const catId = item.product.categoryId;
-    if (!acc[catId]) {
-      const desc = (CAT_DESCRIPTIONS[slug] ?? {})[item.product.category.slug] ?? "";
-      acc[catId] = { catName: item.product.category.name, catSlug: item.product.category.slug, desc, products: [] };
+  // Group by zone label (if set) OR by product category (fallback)
+  const hasZones = rjesenjaItems.some(it => it.zoneLabel);
+
+  const grouped = rjesenjaItems.reduce<Record<string, { catName: string; catSlug: string; desc: string; isZone: boolean; products: typeof rjesenjaItems[0]["product"][] }>>((acc, item) => {
+    const key = hasZones && item.zoneLabel ? `zone:${item.zoneLabel}` : `cat:${item.product.categoryId}`;
+    if (!acc[key]) {
+      if (hasZones && item.zoneLabel) {
+        acc[key] = { catName: item.zoneLabel, catSlug: item.product.category.slug, desc: "", isZone: true, products: [] };
+      } else {
+        const desc = (CAT_DESCRIPTIONS[slug] ?? {})[item.product.category.slug] ?? "";
+        acc[key] = { catName: item.product.category.name, catSlug: item.product.category.slug, desc, isZone: false, products: [] };
+      }
     }
-    acc[catId].products.push(item.product);
+    acc[key].products.push(item.product);
     return acc;
   }, {});
 
