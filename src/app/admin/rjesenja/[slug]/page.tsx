@@ -284,7 +284,17 @@ export default function RjesenjaEditor() {
             </div>
           </div>
 
-          {/* Zone cards with inline product management */}
+          {/* Zone cards with inline product management — sortable */}
+          <DndContext sensors={sensors} collisionDetection={closestCenter}
+            onDragEnd={e => {
+              const { active, over } = e;
+              if (!over || active.id === over.id) return;
+              const oi = zones.items.findIndex((_, idx) => `zone-${idx}` === active.id);
+              const ni = zones.items.findIndex((_, idx) => `zone-${idx}` === over.id);
+              if (oi === -1 || ni === -1) return;
+              setZones({ ...zones, items: arrayMove(zones.items, oi, ni) });
+            }}>
+            <SortableContext items={zones.items.map((_, i) => `zone-${i}`)} strategy={rectSortingStrategy}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {zones.items.map((z, i) => {
               const zoneItems = items.filter(it => it.zoneLabel === z.title);
@@ -293,11 +303,20 @@ export default function RjesenjaEditor() {
                 (!prodSearch || p.title.toLowerCase().includes(prodSearch.toLowerCase()))
               );
 
+              // eslint-disable-next-line react-hooks/rules-of-hooks
+              const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `zone-${i}` });
+
               return (
-                <div key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden" }}>
+                <div key={i} ref={setNodeRef}
+                  style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden",
+                    transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
+                    transition, opacity: isDragging ? 0.6 : 1, zIndex: isDragging ? 10 : undefined,
+                  }}>
                   {/* Zone header */}
                   <div style={{ padding: "12px 16px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", gap: 10, alignItems: "center" }}>
-                    <div style={{ width: 28, height: 28, background: "#C7F1E6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#0F766E" }}>✓</div>
+                    {/* Drag handle */}
+                    <div {...attributes} {...listeners} style={{ cursor: "grab", color: "#CBD5DC", fontSize: 18, flexShrink: 0, userSelect: "none", touchAction: "none" }}>⠿</div>
+                    <div style={{ width: 24, height: 24, background: "#C7F1E6", borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#0F766E" }}>✓</div>
                     <div style={{ flex: 1, display: "flex", gap: 10 }}>
                       <TI placeholder="Naziv zone *" value={z.title} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], title: v }; setZones({ ...zones, items: ni }); }} />
                       <TI placeholder="Kratki opis zone" value={z.desc} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], desc: v }; setZones({ ...zones, items: ni }); }} />
@@ -400,6 +419,8 @@ export default function RjesenjaEditor() {
               );
             })}
           </div>
+          </SortableContext>
+          </DndContext>
 
           {/* Add zone + save */}
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>

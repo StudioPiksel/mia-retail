@@ -18,6 +18,43 @@ type Cta = { h2: string; p: string };
 type Product = { id: string; title: string; series?: string; images: string; subGroup?: string | null; subGroupOrder: number; order: number; category: { name: string; slug: string } };
 type Tab = "hero" | "feature" | "cta" | "sekcije";
 
+// ── Sortable section header (drag to reorder sections) ────────────────────────
+function SortableSectionHeader({ groupName, realProds, renamingGroup, renameVal, setRenamingGroup, setRenameVal, onRename }: {
+  groupName: string; realProds: Product[];
+  renamingGroup: string | null; renameVal: string;
+  setRenamingGroup: (v: string | null) => void; setRenameVal: (v: string) => void;
+  onRename: (old: string, newName: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: groupName });
+  return (
+    <div ref={setNodeRef} style={{
+      transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1,
+      background: "#fff", borderRadius: 12, border: isDragging ? "2px solid #0F766E" : "1px solid #E2E8ED",
+      overflow: "hidden", marginBottom: 0,
+    }}>
+      <div style={{ padding: "11px 16px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", alignItems: "center", gap: 10 }}>
+        <div {...attributes} {...listeners} style={{ cursor: "grab", color: "#CBD5DC", fontSize: 18, flexShrink: 0, userSelect: "none", touchAction: "none" }}>⠿</div>
+        {renamingGroup === groupName ? (
+          <>
+            <input value={renameVal} onChange={e => setRenameVal(e.target.value)} autoFocus
+              onKeyDown={e => { if (e.key === "Enter") onRename(groupName, renameVal); if (e.key === "Escape") setRenamingGroup(null); }}
+              style={{ flex: 1, padding: "5px 10px", border: "1.5px solid #0F766E", borderRadius: 6, fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none" }} />
+            <button onClick={() => onRename(groupName, renameVal)} style={{ padding: "5px 10px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>✓</button>
+            <button onClick={() => setRenamingGroup(null)} style={{ padding: "5px 8px", background: "#E6EEF2", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>✕</button>
+          </>
+        ) : (
+          <>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#0B1D33", flex: 1 }}>{groupName}</span>
+            <span style={{ fontSize: 11, color: "#6B7B8A", background: "#E6EEF2", padding: "2px 8px", borderRadius: 20 }}>{realProds.length}</span>
+            <button onClick={() => { setRenamingGroup(groupName); setRenameVal(groupName); }}
+              style={{ padding: "4px 8px", background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "#6B7B8A" }}>✏ Preimenuj</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Sortable product row ──────────────────────────────────────────────────────
 function SortableProductRow({ p, onRemove }: { p: Product; onRemove: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
@@ -157,6 +194,27 @@ export default function ProizvodiPageEditor() {
         body: JSON.stringify({ categoryId: prod.category.slug, subGroup: groupName, order: maxOrder }),
       });
     }
+    await loadProducts();
+  }
+
+  // Reorder sections (update subGroupOrder on all products per group)
+  async function handleSectionDragEnd(e: DragEndEvent, sectionNames: string[]) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oi = sectionNames.indexOf(active.id as string);
+    const ni = sectionNames.indexOf(over.id as string);
+    if (oi === -1 || ni === -1) return;
+    const reordered = arrayMove(sectionNames, oi, ni);
+    await Promise.all(
+      reordered.flatMap((groupName, newOrder) =>
+        products
+          .filter(p => (p.subGroup ?? "Bez sekcije") === groupName && !p.id.startsWith("__empty__"))
+          .map(p => fetch(`/api/products/${p.id}`, {
+            method: "PUT", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subGroupOrder: newOrder }),
+          }))
+      )
+    );
     await loadProducts();
   }
 
@@ -311,48 +369,46 @@ export default function ProizvodiPageEditor() {
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 20, alignItems: "start" }}>
-            {/* Sekcije */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {groups.filter(([name]) => name !== "Bez sekcije").map(([groupName, groupProds]) => {
-                const realProds = groupProds.filter(p => !p.id.startsWith("__empty__"));
-                return (
-                  <div key={groupName} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden" }}>
-                    {/* Section header */}
-                    <div style={{ padding: "11px 16px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", alignItems: "center", gap: 10 }}>
-                      {renamingGroup === groupName ? (
-                        <>
-                          <input value={renameVal} onChange={e => setRenameVal(e.target.value)} autoFocus
-                            onKeyDown={e => { if (e.key === "Enter") renameGroup(groupName, renameVal); if (e.key === "Escape") setRenamingGroup(null); }}
-                            style={{ flex: 1, padding: "5px 10px", border: "1.5px solid #0F766E", borderRadius: 6, fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none" }} />
-                          <button onClick={() => renameGroup(groupName, renameVal)} style={{ padding: "5px 10px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>✓</button>
-                          <button onClick={() => setRenamingGroup(null)} style={{ padding: "5px 8px", background: "#E6EEF2", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>✕</button>
-                        </>
-                      ) : (
-                        <>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: "#0B1D33", flex: 1 }}>{groupName}</span>
-                          <span style={{ fontSize: 11, color: "#6B7B8A", background: "#E6EEF2", padding: "2px 8px", borderRadius: 20 }}>{realProds.length}</span>
-                          <button onClick={() => { setRenamingGroup(groupName); setRenameVal(groupName); }}
-                            style={{ padding: "4px 8px", background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "#6B7B8A" }}>✏ Preimenuj</button>
-                        </>
-                      )}
-                    </div>
-                    {/* Products */}
-                    {realProds.length === 0 ? (
-                      <div style={{ padding: "24px", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-                        Prazna sekcija — dodajte proizvode iz panela desno
-                      </div>
-                    ) : (
-                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={e => handleDragEnd(groupName, realProds, e)}>
-                        <SortableContext items={realProds.map(p => p.id)} strategy={verticalListSortingStrategy}>
-                          {realProds.map(p => (
-                            <SortableProductRow key={p.id} p={p} onRemove={() => removeFromGroup(p.id)} />
-                          ))}
-                        </SortableContext>
-                      </DndContext>
-                    )}
+            {/* Sekcije — D&D za sekcije + unutar sekcija */}
+            <div>
+              <DndContext sensors={sensors} collisionDetection={closestCenter}
+                onDragEnd={e => handleSectionDragEnd(e, groups.filter(([n]) => n !== "Bez sekcije").map(([n]) => n))}>
+                <SortableContext
+                  items={groups.filter(([n]) => n !== "Bez sekcije").map(([n]) => n)}
+                  strategy={verticalListSortingStrategy}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    {groups.filter(([name]) => name !== "Bez sekcije").map(([groupName, groupProds]) => {
+                      const realProds = groupProds.filter(p => !p.id.startsWith("__empty__"));
+                      return (
+                        <div key={groupName} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden" }}>
+                          <SortableSectionHeader
+                            groupName={groupName}
+                            realProds={realProds}
+                            renamingGroup={renamingGroup}
+                            renameVal={renameVal}
+                            setRenamingGroup={setRenamingGroup}
+                            setRenameVal={setRenameVal}
+                            onRename={renameGroup}
+                          />
+                          {realProds.length === 0 ? (
+                            <div style={{ padding: "24px", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+                              Prazna sekcija — dodajte proizvode iz panela desno
+                            </div>
+                          ) : (
+                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={e => handleDragEnd(groupName, realProds, e)}>
+                              <SortableContext items={realProds.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                                {realProds.map(p => (
+                                  <SortableProductRow key={p.id} p={p} onRemove={() => removeFromGroup(p.id)} />
+                                ))}
+                              </SortableContext>
+                            </DndContext>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </SortableContext>
+              </DndContext>
 
               {/* Bez sekcije */}
               {inCatUngrp.length > 0 && (
