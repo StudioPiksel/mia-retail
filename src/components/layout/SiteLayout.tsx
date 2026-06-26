@@ -1,10 +1,22 @@
 import Header from "./Header";
 import Footer from "./Footer";
+import WhatsAppFloat from "./WhatsAppFloat";
 import Script from "next/script";
 import { prisma } from "@/lib/prisma";
 
 export type MegaRjesenjaItem = { slug: string; title: string; sub: string; img: string; desc: string };
 export type MegaProizvodiItem = { slug: string; title: string; sub: string; img: string };
+
+async function getWhatsApp() {
+  const [num, msg] = await Promise.all([
+    prisma.settings.findUnique({ where: { key: "whatsapp_number" } }),
+    prisma.settings.findUnique({ where: { key: "whatsapp_message" } }),
+  ]);
+  return {
+    number: num?.value ?? "+38267038777",
+    message: msg?.value ?? "Zdravo, zanima me vaša ponuda za opremanje.",
+  };
+}
 
 async function getMegaMenuData() {
   const [mr, mp] = await Promise.all([
@@ -28,7 +40,7 @@ export default async function SiteLayout({
   extraCss?: string[];
   headerLight?: boolean;
 }) {
-  const megaMenu = await getMegaMenuData();
+  const [megaMenu, whatsapp] = await Promise.all([getMegaMenuData(), getWhatsApp()]);
 
   return (
     <>
@@ -48,6 +60,7 @@ export default async function SiteLayout({
       <Header currentPage={currentPage} megaRjesenja={megaMenu.rjesenja} megaProizvodi={megaMenu.proizvodi} />
       <main>{children}</main>
       <Footer />
+      <WhatsAppFloat number={whatsapp.number} message={whatsapp.message} />
       <Script src="/script.js" strategy="afterInteractive" />
       <Script src="/design.js" strategy="afterInteractive" />
     </>

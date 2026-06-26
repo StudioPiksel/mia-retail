@@ -18,6 +18,10 @@ const fields = [
     { key: "footer_tagline", label: "Footer tagline" },
     { key: "footer_address", label: "Adresa" },
   ]},
+  { section: "WhatsApp dugme (donje desno)", items: [
+    { key: "whatsapp_number", label: "WhatsApp broj (npr. +38267038777)" },
+    { key: "whatsapp_message", label: "Poruka koja se šalje pri kliku" },
+  ]},
 ];
 
 export default function SettingsPage() {
