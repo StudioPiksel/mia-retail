@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import ImageUpload from "@/components/admin/ImageUpload";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
 } from "@dnd-kit/core";
@@ -73,9 +74,7 @@ function AddProjectForm({ studioId, onAdded }: { studioId: string; onAdded: () =
           placeholder="Naziv (overlay)" style={inp} />
         <input value={form.caption} onChange={e => setForm({ ...form, caption: e.target.value })}
           placeholder="Caption (opis za lightbox)" style={inp} />
-        <input value={form.image} onChange={e => setForm({ ...form, image: e.target.value })}
-          placeholder="/assets/images/design/studio/naziv.jpg" style={inp} />
-        {form.image && <img src={form.image} alt="" style={{ width: "100%", borderRadius: 6, aspectRatio: "4/3", objectFit: "cover" }} />}
+        <ImageUpload value={form.image} onChange={v => setForm({ ...form, image: v })} maxWidthPx={900} qualityWebp={0.85} />
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => setOpen(false)} style={btnGhost}>Odustani</button>
           <button onClick={handleAdd} disabled={saving} style={btnPrimary}>

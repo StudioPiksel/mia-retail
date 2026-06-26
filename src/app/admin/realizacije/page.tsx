@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import ImageUpload from "@/components/admin/ImageUpload";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -146,11 +147,9 @@ function Modal({ item, onSave, onClose }: { item: Realizacija | null; onSave: (d
                 <button onClick={() => removeImg(i)} style={{ ...iconBtn, color: "#DC2626" }}>✕</button>
               </div>
             ))}
-            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-              <input value={imgInput} onChange={e => setImgInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && addImg()}
-                placeholder="/assets/images/reference/naziv.jpg" style={{ ...inp, flex: 1, fontSize: 12 }} />
-              <button onClick={addImg} style={{ ...btnPrimary, padding: "8px 14px", fontSize: 13 }}>+</button>
+            <div style={{ marginTop: 8 }}>
+              <ImageUpload value={imgInput} onChange={v => setImgInput(v)} maxWidthPx={1280} qualityWebp={0.85} />
+              {imgInput && <button onClick={addImg} style={{ ...btnPrimary, padding: "8px 18px", fontSize: 13, marginTop: 8 }}>+ Dodaj sliku</button>}
             </div>
           </div>
 

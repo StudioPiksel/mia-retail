@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import ImageUpload from "@/components/admin/ImageUpload";
 import { useRouter, useParams } from "next/navigation";
 
 type Category = { id: string; name: string; slug: string };
@@ -161,11 +162,9 @@ export default function ProductEditor() {
               </div>
             ))}
 
-            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-              <input value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && addImage()}
-                placeholder="/assets/images/katalog/..." style={{ ...inp, flex: 1, fontSize: 12 }} />
-              <button onClick={addImage} style={{ ...btnPrimary, padding: "8px 14px", fontSize: 13 }}>+</button>
+            <div style={{ marginTop: 10 }}>
+              <ImageUpload value={newImageUrl} onChange={v => setNewImageUrl(v)} maxWidthPx={900} qualityWebp={0.85} />
+              {newImageUrl && <button onClick={addImage} style={{ ...btnPrimary, padding: "8px 16px", fontSize: 13, marginTop: 8 }}>+ Dodaj sliku</button>}
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 type RjesenjaPage = { slug: string; label: string; bg: string };
 
@@ -130,9 +131,7 @@ export default function RjesenjaListAdmin() {
                 <p style={{ fontSize: 12, color: "#6B7B8A", marginTop: 4 }}>Stranica će biti dostupna na: /rjesenja/{newSlug || "slug"}</p>
               </div>
               <div>
-                <label style={lbl}>Hero pozadinska slika (URL)</label>
-                <input value={newBg} onChange={e => setNewBg(e.target.value)} style={inp} />
-                {newBg && <img src={newBg} alt="" style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: 8, marginTop: 8 }} />}
+                <ImageUpload label="Hero pozadinska slika" value={newBg} onChange={setNewBg} maxWidthPx={1440} qualityWebp={0.85} />
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 24 }}>

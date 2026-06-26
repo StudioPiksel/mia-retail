@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import ImageUpload from "@/components/admin/ImageUpload";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
 } from "@dnd-kit/core";
@@ -246,8 +247,7 @@ export default function RjesenjaEditor() {
             <Row label="H1 istaknuti tekst (teal)"><TI value={hero.h1Highlight} set={v => setHero({ ...hero, h1Highlight: v })} /></Row>
             <Row label="Lead paragraf"><TA value={hero.lead} set={v => setHero({ ...hero, lead: v })} /></Row>
             <Row label="Pozadinska slika (URL)">
-              <TI value={hero.heroBg} set={v => setHero({ ...hero, heroBg: v })} />
-              {hero.heroBg && <img src={hero.heroBg} alt="" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginTop: 8 }} />}
+              <ImageUpload value={hero.heroBg} onChange={v => setHero({ ...hero, heroBg: v })} maxWidthPx={1440} qualityWebp={0.85} />
             </Row>
             <Row label="Statistike (3)">
               {hero.stats.map((s, i) => (
@@ -307,7 +307,7 @@ export default function RjesenjaEditor() {
               <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "center", padding: "10px 12px", border: "1px solid #E2E8ED", borderRadius: 10, background: "#F8FAFB" }}>
                 {r.img && <img src={r.img} alt="" style={{ width: 64, height: 44, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />}
                 <div style={{ flex: 1, display: "flex", gap: 8 }}>
-                  <TI placeholder="URL slike" value={r.img} set={v => { const ni = [...realizacije.items]; ni[i] = { ...ni[i], img: v }; setRealizacije({ ...realizacije, items: ni }); }} />
+                  <ImageUpload value={r.img} onChange={v => { const ni = [...realizacije.items]; ni[i] = { ...ni[i], img: v }; setRealizacije({ ...realizacije, items: ni }); }} maxWidthPx={1280} qualityWebp={0.82} />
                   <TI placeholder="Labela (slider naslov)" value={r.label} set={v => { const ni = [...realizacije.items]; ni[i] = { ...ni[i], label: v }; setRealizacije({ ...realizacije, items: ni }); }} />
                 </div>
                 <button onClick={() => setRealizacije({ ...realizacije, items: realizacije.items.filter((_, idx) => idx !== i) })}

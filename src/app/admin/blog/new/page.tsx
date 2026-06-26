@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export default function NewBlogPost() {
   const router = useRouter();
@@ -90,12 +91,7 @@ export default function NewBlogPost() {
           </div>
 
           <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", padding: 20 }}>
-            <strong style={{ fontSize: 13, color: "#0B1D33", display: "block", marginBottom: 12 }}>Thumbnail slika</strong>
-            <input value={form.thumbnail} onChange={e => setForm({ ...form, thumbnail: e.target.value })}
-              placeholder="/assets/images/blog/..." style={{ ...inp, fontSize: 13 }} />
-            {form.thumbnail && (
-              <img src={form.thumbnail} alt="" style={{ width: "100%", borderRadius: 8, marginTop: 10, aspectRatio: "16/9", objectFit: "cover" }} />
-            )}
+            <ImageUpload label="Thumbnail slika" value={form.thumbnail} onChange={v => setForm({ ...form, thumbnail: v })} maxWidthPx={1200} qualityWebp={0.85} />
           </div>
         </div>
       </div>

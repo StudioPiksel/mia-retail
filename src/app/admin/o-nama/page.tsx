@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 type Hero = { eyebrow: string; h1: string; h1Highlight: string; lead: string; heroBg: string; stats: { num: string; label: string }[] };
 type Intro = { badge: string; h2: string; p1: string; p2: string; image: string; btnLabel: string; btnHref: string };
@@ -64,7 +65,7 @@ export default function ONamaAdmin() {
           <TArea value={hero.lead} onChange={v => setHero({ ...hero, lead: v })} rows={3} />
         </Row>
         <Row label="Hero pozadinska slika (URL)">
-          <TInput value={hero.heroBg} onChange={v => setHero({ ...hero, heroBg: v })} />
+          <ImageUpload value={hero.heroBg} onChange={v => setHero({ ...hero, heroBg: v })} maxWidthPx={1440} qualityWebp={0.85} />
         </Row>
         <Row label="Statistike">
           {hero.stats.map((s, i) => (
@@ -84,8 +85,7 @@ export default function ONamaAdmin() {
         <Row label="Paragraf 1"><TArea value={intro.p1} onChange={v => setIntro({ ...intro, p1: v })} rows={3} /></Row>
         <Row label="Paragraf 2"><TArea value={intro.p2} onChange={v => setIntro({ ...intro, p2: v })} rows={3} /></Row>
         <Row label="Slika (URL)">
-          <TInput value={intro.image} onChange={v => setIntro({ ...intro, image: v })} />
-          {intro.image && <img src={intro.image} alt="" style={{ width: "100%", maxWidth: 200, borderRadius: 8, marginTop: 8 }} />}
+          <ImageUpload value={intro.image} onChange={v => setIntro({ ...intro, image: v })} maxWidthPx={900} qualityWebp={0.85} />
         </Row>
         <Row label="Dugme tekst"><TInput value={intro.btnLabel} onChange={v => setIntro({ ...intro, btnLabel: v })} /></Row>
         <Row label="Dugme URL"><TInput value={intro.btnHref} onChange={v => setIntro({ ...intro, btnHref: v })} /></Row>

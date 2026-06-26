@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 type Hero = { eyebrow: string; h1: string; h1Highlight: string; lead: string; heroBg: string; stats: { num: string; label: string }[]; ctaLabel: string; ctaHref: string };
 type Chip = { label: string; href: string };
@@ -46,7 +47,7 @@ export default function PomocAdmin() {
         <Row label="H1 tekst"><TI value={hero.h1} set={v => setHero({ ...hero, h1: v })} /></Row>
         <Row label="H1 istaknuti dio (teal)"><TI value={hero.h1Highlight} set={v => setHero({ ...hero, h1Highlight: v })} /></Row>
         <Row label="Lead tekst"><TA value={hero.lead} set={v => setHero({ ...hero, lead: v })} /></Row>
-        <Row label="Hero pozadina (URL)"><TI value={hero.heroBg} set={v => setHero({ ...hero, heroBg: v })} /></Row>
+        <Row label="Hero pozadinska slika"><ImageUpload value={hero.heroBg} onChange={v => setHero({ ...hero, heroBg: v })} maxWidthPx={1440} qualityWebp={0.85} /></Row>
         <Row label="Statistike">
           {hero.stats.map((s, i) => (
             <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
