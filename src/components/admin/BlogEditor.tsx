@@ -1,11 +1,17 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useEditor, EditorContent, Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import Placeholder from "@tiptap/extension-placeholder";
+import { useEffect, useState, useRef } from "react";
 import ImageUpload from "./ImageUpload";
 
 type Product = {
   id: string; title: string; series?: string; images: string;
-  subGroup?: string; zoneLabel?: string;
-  category: { name: string; slug: string };
+  subGroup?: string; category: { name: string; slug: string };
 };
 
 interface Props {
@@ -19,88 +25,133 @@ function slugify(str: string) {
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+// ── Toolbar button ─────────────────────────────────────────────────────────────
+function TB({ active, onClick, title, children, style }: {
+  active?: boolean; onClick: () => void; title?: string;
+  children: React.ReactNode; style?: React.CSSProperties;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      style={{
+        padding: "5px 10px", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6,
+        background: active ? "rgba(199,241,230,0.25)" : "rgba(255,255,255,0.08)",
+        color: active ? "#C7F1E6" : "#fff", cursor: "pointer",
+        fontSize: 12, fontFamily: "'Satoshi', sans-serif", fontWeight: active ? 700 : 500,
+        display: "flex", alignItems: "center", gap: 4, transition: "all 0.15s",
+        ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Divider() {
+  return <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)", margin: "0 2px", flexShrink: 0 }} />;
+}
+
+// ── Main Editor ────────────────────────────────────────────────────────────────
 export default function BlogEditor({ value, onChange }: Props) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [showImgUpload, setShowImgUpload] = useState(false);
-  const [showVideoInput, setShowVideoInput] = useState(false);
+  const [mode, setMode] = useState<"visual" | "html">("visual");
+  const [htmlValue, setHtmlValue] = useState(value);
+  const [showImg, setShowImg] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
-  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [showProduct, setShowProduct] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [prodSearch, setProdSearch] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [showLink, setShowLink] = useState(false);
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+      }),
+      Image.configure({ allowBase64: true, inline: false }),
+      Link.configure({ openOnClick: false, autolink: true }),
+      Underline,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Placeholder.configure({ placeholder: "Počnite pisati vaš post..." }),
+    ],
+    content: value,
+    onUpdate({ editor }) {
+      const html = editor.getHTML();
+      onChange(html);
+      setHtmlValue(html);
+    },
+    editorProps: {
+      attributes: {
+        class: "tiptap-content",
+        style: "outline:none;min-height:400px;padding:20px 24px;font-family:'Satoshi',sans-serif;font-size:15px;line-height:1.75;color:#111827;",
+      },
+    },
+  });
+
+  // Sync incoming value changes (e.g. when loading saved content)
   useEffect(() => {
-    if (showProductPicker && products.length === 0) {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
+      setHtmlValue(value);
+    }
+  }, []);
+
+  // Load products when picker opens
+  useEffect(() => {
+    if (showProduct && products.length === 0) {
       fetch("/api/products").then(r => r.json()).then(setProducts);
     }
-  }, [showProductPicker]);
+  }, [showProduct]);
 
-  function insertAtCursor(html: string) {
-    const ta = textareaRef.current;
-    if (!ta) { onChange(value + html); return; }
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
-    const newVal = value.slice(0, start) + html + value.slice(end);
-    onChange(newVal);
-    // Restore cursor after inserted text
-    setTimeout(() => {
-      ta.focus();
-      ta.setSelectionRange(start + html.length, start + html.length);
-    }, 0);
+  function switchToHtml() {
+    setHtmlValue(editor?.getHTML() ?? "");
+    setMode("html");
   }
 
-  function wrapSelection(before: string, after: string) {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
-    const selected = value.slice(start, end) || "tekst";
-    const newVal = value.slice(0, start) + before + selected + after + value.slice(end);
-    onChange(newVal);
-    setTimeout(() => { ta.focus(); ta.setSelectionRange(start + before.length, start + before.length + selected.length); }, 0);
+  function switchToVisual() {
+    editor?.commands.setContent(htmlValue);
+    onChange(htmlValue);
+    setMode("visual");
   }
 
   function insertImage(url: string) {
-    insertAtCursor(`\n<img src="${url}" alt="" style="width:100%;border-radius:12px;margin:24px 0;" loading="lazy">\n`);
-    setShowImgUpload(false);
+    editor?.chain().focus().setImage({ src: url, alt: "" }).run();
+    setShowImg(false);
   }
 
   function insertVideo() {
-    if (!videoUrl.trim()) return;
-    // Extract YouTube/Vimeo ID
+    if (!videoUrl.trim() || !editor) return;
     const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^&?]+)/);
     const viMatch = videoUrl.match(/vimeo\.com\/(\d+)/);
+    let html = "";
     if (ytMatch) {
-      insertAtCursor(`\n<div class="blog-video-wrap" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin:24px 0;">
-  <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe>
-</div>\n`);
+      html = `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin:24px 0;"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe></div>`;
     } else if (viMatch) {
-      insertAtCursor(`\n<div class="blog-video-wrap" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin:24px 0;">
-  <iframe src="https://player.vimeo.com/video/${viMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe>
-</div>\n`);
+      html = `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin:24px 0;"><iframe src="https://player.vimeo.com/video/${viMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe></div>`;
     } else {
-      insertAtCursor(`\n<video src="${videoUrl}" controls style="width:100%;border-radius:12px;margin:24px 0;"></video>\n`);
+      html = `<video src="${videoUrl}" controls style="width:100%;border-radius:12px;margin:24px 0;"></video>`;
     }
-    setVideoUrl(""); setShowVideoInput(false);
+    editor.commands.insertContent(html);
+    setVideoUrl(""); setShowVideo(false);
   }
 
   function insertProduct(prod: Product) {
+    if (!editor) return;
     const img = (() => { try { return JSON.parse(prod.images)[0] ?? ""; } catch { return ""; } })();
-    // Build anchor: zone from subGroup
     const zone = prod.subGroup ? slugify(prod.subGroup) : "";
     const url = `/proizvodi/${prod.category.slug}${zone ? `#${zone}` : ""}`;
+    const html = `<a href="${url}" class="blog-product-card" style="display:flex;gap:16px;align-items:center;padding:16px 20px;background:#F8FAFB;border:1.5px solid #E2E8ED;border-radius:12px;text-decoration:none;margin:20px 0;">${img ? `<img src="${img}" alt="${prod.title}" style="width:72px;height:72px;object-fit:contain;border-radius:8px;background:#fff;flex-shrink:0;">` : ""}<div style="flex:1;"><div style="font-size:11px;font-weight:700;color:#0F766E;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${prod.category.name}</div><div style="font-size:15px;font-weight:700;color:#0B1D33;margin-bottom:2px;">${prod.title}</div>${prod.series ? `<div style="font-size:12px;color:#6B7B8A;">${prod.series}</div>` : ""}</div><span style="font-size:13px;color:#0F766E;font-weight:600;white-space:nowrap;flex-shrink:0;">Pogledajte →</span></a>`;
+    editor.commands.insertContent(html);
+    setShowProduct(false); setProdSearch("");
+  }
 
-    const html = `
-<a href="${url}" class="blog-product-card" style="display:flex;gap:16px;align-items:center;padding:16px 20px;background:#F8FAFB;border:1.5px solid #E2E8ED;border-radius:12px;text-decoration:none;margin:20px 0;transition:border-color 0.2s;">
-  ${img ? `<img src="${img}" alt="${prod.title}" style="width:72px;height:72px;object-fit:contain;border-radius:8px;background:#fff;flex-shrink:0;">` : ""}
-  <div style="flex:1;">
-    <div style="font-size:11px;font-weight:700;color:#0F766E;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${prod.category.name}</div>
-    <div style="font-size:15px;font-weight:700;color:#0B1D33;margin-bottom:2px;">${prod.title}</div>
-    ${prod.series ? `<div style="font-size:12px;color:#6B7B8A;">${prod.series}</div>` : ""}
-  </div>
-  <span style="font-size:13px;color:#0F766E;font-weight:600;white-space:nowrap;flex-shrink:0;">Pogledajte →</span>
-</a>`;
-    insertAtCursor(html);
-    setShowProductPicker(false); setProdSearch("");
+  function setLink() {
+    if (!linkUrl.trim()) { editor?.chain().focus().unsetLink().run(); }
+    else { editor?.chain().focus().setLink({ href: linkUrl }).run(); }
+    setLinkUrl(""); setShowLink(false);
   }
 
   const filteredProducts = products.filter(p =>
@@ -108,94 +159,100 @@ export default function BlogEditor({ value, onChange }: Props) {
     p.category.name.toLowerCase().includes(prodSearch.toLowerCase())
   );
 
-  const TB: React.CSSProperties = {
-    padding: "6px 10px", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6,
-    background: "rgba(255,255,255,0.08)", color: "#fff", cursor: "pointer",
-    fontSize: 12, fontFamily: "'Satoshi', sans-serif", fontWeight: 500,
-    display: "flex", alignItems: "center", gap: 5,
-  };
+  if (!editor) return <div style={{ height: 400, background: "#F8FAFB", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "#9CA3AF" }}>Učitavanje editora...</div>;
 
   return (
-    <div>
-      {/* Toolbar */}
+    <div style={{ border: "1.5px solid #E2E8ED", borderRadius: 10, overflow: "hidden" }}>
+      {/* ── TOOLBAR ── */}
       <div style={{
-        background: "#0B1D33", borderRadius: "10px 10px 0 0", padding: "8px 12px",
-        display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center",
+        background: "#0B1D33", padding: "8px 12px",
+        display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center",
       }}>
         {/* Headings */}
-        <button style={TB} onClick={() => insertAtCursor("\n<h2>Naslov</h2>\n")} title="H2">H2</button>
-        <button style={TB} onClick={() => insertAtCursor("\n<h3>Podnaslov</h3>\n")} title="H3">H3</button>
+        <TB active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="Naslov H2">H2</TB>
+        <TB active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} title="Naslov H3">H3</TB>
+        <Divider />
 
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)", margin: "0 2px" }} />
+        {/* Text format */}
+        <TB active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Podebljano"><b>B</b></TB>
+        <TB active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Kurziv"><i>I</i></TB>
+        <TB active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Podcrtano"><u>U</u></TB>
+        <TB active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Citat">❝</TB>
+        <Divider />
 
-        {/* Text formatting */}
-        <button style={TB} onClick={() => wrapSelection("<strong>", "</strong>")} title="Bold"><b>B</b></button>
-        <button style={TB} onClick={() => wrapSelection("<em>", "</em>")} title="Italic"><i>I</i></button>
-        <button style={TB} onClick={() => insertAtCursor("\n<blockquote style=\"border-left:4px solid #0F766E;padding:12px 20px;background:#F0FDF4;margin:20px 0;border-radius:0 8px 8px 0;font-style:italic;\">Citat ili istaknuta rečenica</blockquote>\n")} title="Blockquote">❝</button>
+        {/* Lists */}
+        <TB active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Lista s tačkama">• Lista</TB>
+        <TB active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Numerisana lista">1. Lista</TB>
+        <Divider />
 
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)", margin: "0 2px" }} />
+        {/* Align */}
+        <TB active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()} title="Lijevo">⬅</TB>
+        <TB active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()} title="Centar">↔</TB>
+        <Divider />
 
-        {/* List */}
-        <button style={TB} onClick={() => insertAtCursor("\n<ul>\n  <li>Stavka 1</li>\n  <li>Stavka 2</li>\n  <li>Stavka 3</li>\n</ul>\n")} title="Lista">≡</button>
-
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)", margin: "0 2px" }} />
+        {/* Link */}
+        <TB active={editor.isActive("link")} onClick={() => { setLinkUrl(editor.getAttributes("link").href ?? ""); setShowLink(s => !s); setShowImg(false); setShowVideo(false); setShowProduct(false); }} title="Link">🔗 Link</TB>
+        <Divider />
 
         {/* Media */}
-        <button style={{ ...TB, background: showImgUpload ? "rgba(15,118,110,0.4)" : "rgba(255,255,255,0.08)" }}
-          onClick={() => { setShowImgUpload(s => !s); setShowVideoInput(false); setShowProductPicker(false); }}>
-          🖼 Slika
-        </button>
-        <button style={{ ...TB, background: showVideoInput ? "rgba(15,118,110,0.4)" : "rgba(255,255,255,0.08)" }}
-          onClick={() => { setShowVideoInput(s => !s); setShowImgUpload(false); setShowProductPicker(false); }}>
-          ▶ Video
-        </button>
-
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)", margin: "0 2px" }} />
+        <TB active={showImg} onClick={() => { setShowImg(s => !s); setShowVideo(false); setShowProduct(false); setShowLink(false); }} title="Umetni sliku">🖼 Slika</TB>
+        <TB active={showVideo} onClick={() => { setShowVideo(s => !s); setShowImg(false); setShowProduct(false); setShowLink(false); }} title="Umetni video">▶ Video</TB>
+        <Divider />
 
         {/* Product insert */}
-        <button style={{ ...TB, background: showProductPicker ? "rgba(199,241,230,0.2)" : "rgba(255,255,255,0.08)", borderColor: showProductPicker ? "#C7F1E6" : "rgba(255,255,255,0.2)", color: showProductPicker ? "#C7F1E6" : "#fff" }}
-          onClick={() => { setShowProductPicker(s => !s); setShowImgUpload(false); setShowVideoInput(false); }}>
+        <TB
+          active={showProduct}
+          onClick={() => { setShowProduct(s => !s); setShowImg(false); setShowVideo(false); setShowLink(false); }}
+          title="Umetni product karticu"
+          style={{ borderColor: showProduct ? "#C7F1E6" : undefined, color: showProduct ? "#C7F1E6" : "#fff" }}
+        >
           📦 Ubaci proizvod
-        </button>
+        </TB>
+
+        {/* Mode toggle */}
+        <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+          <TB active={mode === "visual"} onClick={switchToVisual}>✨ Vizualni</TB>
+          <TB active={mode === "html"} onClick={switchToHtml}>&lt;/&gt; HTML</TB>
+        </div>
       </div>
 
-      {/* Image upload panel */}
-      {showImgUpload && (
-        <div style={{ padding: "14px 16px", background: "#F0FDF4", border: "1px solid #BBF7D0", borderTop: "none" }}>
-          <ImageUpload value="" onChange={url => { if (url) insertImage(url); }} maxWidthPx={1200} qualityWebp={0.85} label="Odaberi ili uploadaj sliku" />
-          <p style={{ fontSize: 11, color: "#6B7B8A", marginTop: 6 }}>Ili upiši URL ručno i pritisni Enter</p>
+      {/* ── PANELS ── */}
+      {showLink && (
+        <div style={{ padding: "10px 14px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", gap: 8 }}>
+          <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://..."
+            onKeyDown={e => e.key === "Enter" && setLink()}
+            style={{ flex: 1, padding: "7px 10px", border: "1.5px solid #E2E8ED", borderRadius: 7, fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none" }} />
+          <button onClick={setLink} style={{ padding: "7px 14px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>Postavi link</button>
+          <button onClick={() => { editor.chain().focus().unsetLink().run(); setShowLink(false); }} style={{ padding: "7px 12px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13 }}>Ukloni link</button>
         </div>
       )}
 
-      {/* Video URL panel */}
-      {showVideoInput && (
-        <div style={{ padding: "12px 16px", background: "#F8FAFB", border: "1px solid #E2E8ED", borderTop: "none", display: "flex", gap: 8 }}>
+      {showImg && (
+        <div style={{ padding: "14px 16px", background: "#F0FDF4", borderBottom: "1px solid #E2E8ED" }}>
+          <ImageUpload value="" onChange={url => { if (url) insertImage(url); }} maxWidthPx={1200} qualityWebp={0.85} label="Odaberi ili uploaduj sliku" />
+        </div>
+      )}
+
+      {showVideo && (
+        <div style={{ padding: "10px 14px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", gap: 8 }}>
           <input value={videoUrl} onChange={e => setVideoUrl(e.target.value)}
             onKeyDown={e => e.key === "Enter" && insertVideo()}
-            placeholder="YouTube / Vimeo URL ili direktan link na video..."
-            style={{ flex: 1, padding: "8px 12px", border: "1.5px solid #E2E8ED", borderRadius: 7, fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none" }} />
-          <button onClick={insertVideo} style={{ padding: "8px 16px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'Satoshi', sans-serif" }}>
-            Ubaci
-          </button>
+            placeholder="YouTube ili Vimeo URL..."
+            style={{ flex: 1, padding: "7px 10px", border: "1.5px solid #E2E8ED", borderRadius: 7, fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none" }} />
+          <button onClick={insertVideo} style={{ padding: "7px 14px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>Ubaci</button>
         </div>
       )}
 
-      {/* Product picker panel */}
-      {showProductPicker && (
-        <div style={{ border: "1px solid #C7F1E6", borderTop: "none", borderRadius: "0 0 8px 8px", background: "#fff", maxHeight: 340, display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: "10px 14px", borderBottom: "1px solid #E2E8ED", background: "#F0FDF4" }}>
-            <p style={{ fontSize: 12, color: "#0A5C56", fontWeight: 600, margin: "0 0 6px" }}>
-              📦 Odaberi proizvod → ubacuje se kao kartica s linkom na konkretnu zonu
-            </p>
-            <input value={prodSearch} onChange={e => setProdSearch(e.target.value)} placeholder="Pretraži po nazivu ili kategoriji..."
-              autoFocus
+      {showProduct && (
+        <div style={{ background: "#fff", borderBottom: "1px solid #E2E8ED", maxHeight: 300, display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "10px 14px", background: "#F0FDF4", borderBottom: "1px solid #E2E8ED" }}>
+            <p style={{ fontSize: 12, color: "#0A5C56", fontWeight: 600, margin: "0 0 6px" }}>Odaberi proizvod — ubacuje se kao kartica s linkom</p>
+            <input value={prodSearch} onChange={e => setProdSearch(e.target.value)} placeholder="Pretraži..." autoFocus
               style={{ width: "100%", padding: "7px 10px", border: "1.5px solid #E2E8ED", borderRadius: 7, fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box" }} />
           </div>
           <div style={{ overflowY: "auto", flex: 1 }}>
             {filteredProducts.slice(0, 30).map(prod => {
               const img = (() => { try { return JSON.parse(prod.images)[0]; } catch { return null; } })();
-              const zone = prod.subGroup ? slugify(prod.subGroup) : "";
-              const url = `/proizvodi/${prod.category.slug}${zone ? `#${zone}` : ""}`;
               return (
                 <button key={prod.id} onClick={() => insertProduct(prod)} style={{
                   width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 14px",
@@ -212,35 +269,57 @@ export default function BlogEditor({ value, onChange }: Props) {
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prod.title}</div>
                     <div style={{ fontSize: 11, color: "#6B7B8A" }}>{prod.category.name}{prod.subGroup ? ` · ${prod.subGroup}` : ""}</div>
                   </div>
-                  <div style={{ fontSize: 10, color: "#9CA3AF", flexShrink: 0 }}>→ {url.slice(0, 30)}...</div>
+                  <span style={{ fontSize: 18, color: "#0F766E", flexShrink: 0 }}>+</span>
                 </button>
               );
             })}
-            {filteredProducts.length === 0 && (
-              <div style={{ padding: 24, textAlign: "center", color: "#6B7B8A", fontSize: 13 }}>Nema rezultata</div>
-            )}
+            {filteredProducts.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "#6B7B8A" }}>Nema rezultata</div>}
           </div>
         </div>
       )}
 
-      {/* Textarea */}
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        rows={22}
-        placeholder="<p>Unesite sadržaj posta u HTML formatu...</p>"
-        style={{
-          width: "100%", padding: "14px", border: "1.5px solid #E2E8ED",
-          borderTop: "none", borderRadius: "0 0 10px 10px",
-          fontSize: 13, fontFamily: "monospace", outline: "none",
-          boxSizing: "border-box", color: "#111827", background: "#fff",
-          resize: "vertical", lineHeight: 1.6,
-        }}
-      />
-      <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
-        HTML · &lt;h2&gt; &lt;p&gt; &lt;ul&gt;&lt;li&gt; &lt;strong&gt; &lt;blockquote&gt; &lt;img&gt; · video embed ubacuje se automatski iz YouTube/Vimeo URL-a
-      </p>
+      {/* ── EDITOR CONTENT ── */}
+      {mode === "visual" ? (
+        <div style={{ background: "#fff" }}>
+          <EditorContent editor={editor} />
+        </div>
+      ) : (
+        <div>
+          <textarea
+            value={htmlValue}
+            onChange={e => { setHtmlValue(e.target.value); onChange(e.target.value); }}
+            rows={22}
+            style={{
+              width: "100%", padding: "14px", border: "none", outline: "none",
+              fontSize: 13, fontFamily: "monospace", resize: "vertical",
+              lineHeight: 1.6, color: "#111827", background: "#fff", display: "block",
+              boxSizing: "border-box",
+            }}
+          />
+          <div style={{ padding: "8px 14px", background: "#F8FAFB", borderTop: "1px solid #E2E8ED", fontSize: 11, color: "#9CA3AF" }}>
+            HTML mod — direktno uređivanje koda · prebaci na Vizualni da vidiš formatiran tekst
+          </div>
+        </div>
+      )}
+
+      {/* ── TipTap CSS ── */}
+      <style>{`
+        .tiptap-content h2 { font-size: 1.5rem; font-weight: 800; color: #0B1D33; margin: 28px 0 12px; line-height: 1.3; }
+        .tiptap-content h3 { font-size: 1.2rem; font-weight: 700; color: #0B1D33; margin: 20px 0 8px; }
+        .tiptap-content p { margin: 0 0 14px; }
+        .tiptap-content strong { font-weight: 700; color: #0B1D33; }
+        .tiptap-content em { font-style: italic; }
+        .tiptap-content u { text-decoration: underline; }
+        .tiptap-content blockquote { border-left: 4px solid #0F766E; padding: 12px 20px; background: #F0FDF4; margin: 20px 0; border-radius: 0 8px 8px 0; font-style: italic; color: #374151; }
+        .tiptap-content ul { padding-left: 20px; margin: 0 0 14px; }
+        .tiptap-content ol { padding-left: 20px; margin: 0 0 14px; }
+        .tiptap-content li { margin-bottom: 6px; }
+        .tiptap-content a { color: #0F766E; text-decoration: underline; }
+        .tiptap-content img { max-width: 100%; border-radius: 12px; margin: 20px 0; display: block; }
+        .tiptap-content .blog-product-card:hover { border-color: #0F766E !important; }
+        .tiptap-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: #9CA3AF; pointer-events: none; height: 0; }
+        .ProseMirror-focused { outline: none; }
+      `}</style>
     </div>
   );
 }
