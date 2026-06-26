@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import ImageUpload from "@/components/admin/ImageUpload";
+import BlogEditor from "@/components/admin/BlogEditor";
 import { useRouter, useParams } from "next/navigation";
 
 export default function EditBlogPost() {
@@ -76,12 +77,8 @@ export default function EditBlogPost() {
           </div>
 
           <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", padding: 24 }}>
-            <label style={lbl}>Sadržaj (HTML)</label>
-            <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })}
-              rows={20} style={{ ...inp, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
-            <p style={{ fontSize: 12, color: "#6B7B8A", marginTop: 8 }}>
-              Koristite HTML tagove: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;img&gt;...
-            </p>
+            <label style={{ ...lbl, marginBottom: 10 }}>Sadržaj</label>
+            <BlogEditor value={form.content} onChange={v => setForm({ ...form, content: v })} />
           </div>
         </div>
 

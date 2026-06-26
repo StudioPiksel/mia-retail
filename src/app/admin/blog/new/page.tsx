@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUpload from "@/components/admin/ImageUpload";
+import BlogEditor from "@/components/admin/BlogEditor";
 
 export default function NewBlogPost() {
   const router = useRouter();
@@ -68,13 +69,8 @@ export default function NewBlogPost() {
           </div>
 
           <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", padding: 24 }}>
-            <label style={lbl}>Sadržaj (HTML)</label>
-            <textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })}
-              placeholder="<p>Unesite sadržaj posta...</p>" rows={18}
-              style={{ ...inp, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
-            <p style={{ fontSize: 12, color: "#6B7B8A", marginTop: 8 }}>
-              Koristite HTML tagove: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;img&gt;...
-            </p>
+            <label style={{ ...lbl, marginBottom: 10 }}>Sadržaj</label>
+            <BlogEditor value={form.content} onChange={v => setForm({ ...form, content: v })} />
           </div>
         </div>
 

@@ -3,16 +3,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-const nav = [
+type NavItem = { href: string; label: string; icon: string } | { separator: string };
+
+const nav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: "⬛" },
+
+  { separator: "SADRŽAJ" },
   { href: "/admin/navigacija", label: "Navigacija", icon: "🧭" },
-  { href: "/admin/products", label: "Proizvodi", icon: "📦" },
-  { href: "/admin/rjesenja", label: "Rješenja stranice", icon: "🏪" },
+  { href: "/admin/blog", label: "Blog", icon: "✏" },
+  { href: "/admin/media", label: "Media Library", icon: "🖼" },
+
+  { separator: "PROIZVODI" },
+  { href: "/admin/products", label: "Baza proizvoda", icon: "📦" },
+
+  { separator: "STRANICE" },
+  { href: "/admin/rjesenja", label: "Rješenja", icon: "🏪" },
+  { href: "/admin/stranice/proizvodi", label: "Proizvodi stranice", icon: "🗂" },
   { href: "/admin/realizacije", label: "Realizacije", icon: "🏆" },
   { href: "/admin/dizajn-enterijera", label: "Dizajn enterijera", icon: "🎨" },
   { href: "/admin/o-nama", label: "O nama", icon: "🏢" },
-  { href: "/admin/pomoc-u-izboru", label: "Pomoć u izboru", icon: "🧭" },
-  { href: "/admin/blog", label: "Blog", icon: "✏" },
+  { href: "/admin/pomoc-u-izboru", label: "Pomoć u izboru", icon: "❓" },
+  { href: "/admin/kontakt", label: "Kontakt", icon: "📬" },
+
+  { separator: "SISTEM" },
   { href: "/admin/settings", label: "Postavke", icon: "⚙" },
   { href: "/admin/users", label: "Korisnici", icon: "👤" },
 ];
@@ -36,8 +49,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Admin Panel
           </div>
         </div>
-        <nav style={{ flex: 1, padding: "16px 12px" }}>
-          {nav.map((item) => {
+        <nav style={{ flex: 1, padding: "12px 12px", overflowY: "auto" }}>
+          {nav.map((item, idx) => {
+            if ("separator" in item) {
+              return (
+                <div key={idx} style={{
+                  fontSize: 9, fontWeight: 700, color: "rgba(199,241,230,0.45)",
+                  letterSpacing: "0.12em", textTransform: "uppercase",
+                  padding: "14px 10px 5px", marginTop: idx > 0 ? 4 : 0,
+                  borderTop: idx > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                }}>
+                  {item.separator}
+                </div>
+              );
+            }
             const active = path === item.href || (item.href !== "/admin" && path.startsWith(item.href));
             return (
               <Link key={item.href} href={item.href} style={{

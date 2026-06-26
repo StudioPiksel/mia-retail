@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SiteLayout from "@/components/layout/SiteLayout";
+
+function slugify(str: string) {
+  return str.toLowerCase()
+    .replace(/[čć]/g, "c").replace(/š/g, "s").replace(/ž/g, "z").replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
 import { ProductCard } from "@/components/products/ProductCard";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -211,10 +217,41 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: `${c?.h1 ?? ""} ${c?.highlight ?? cat.name} | MIA Retail Solutions`, description: c?.lead };
 }
 
+async function getPageSetting<T>(key: string, fallback: T): Promise<T> {
+  const s = await prisma.settings.findUnique({ where: { key } });
+  if (!s) return fallback;
+  try { return JSON.parse(s.value) as T; } catch { return fallback; }
+}
+
 export default async function ProizvodiPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const category = await prisma.productCategory.findUnique({ where: { slug } });
   if (!category) notFound();
+
+  // Load page config from Settings DB, fall back to hardcoded CONFIG
+  const hardcfg = CONFIG[slug];
+  const [dbHero, dbFeature, dbCta] = await Promise.all([
+    getPageSetting(`proizvodi_${slug}_hero`, null as null | { eyebrow: string; h1: string; h1Highlight: string; lead: string; heroBg: string; stats: { num: string; label: string }[]; ghostLabel: string; ghostHref: string }),
+    getPageSetting(`proizvodi_${slug}_feature`, null as null | { badge: string; h2: string; p: string; li: string[]; img: string }),
+    getPageSetting(`proizvodi_${slug}_cta`, null as null | { h2: string; p: string }),
+  ]);
+
+  // Merge: DB settings override hardcoded CONFIG
+  const cfg = {
+    eyebrow: dbHero?.eyebrow ?? hardcfg?.eyebrow ?? "Proizvodi",
+    h1: dbHero?.h1 ?? hardcfg?.h1 ?? category!.name,
+    highlight: dbHero?.h1Highlight ?? hardcfg?.highlight ?? "",
+    lead: dbHero?.lead ?? hardcfg?.lead ?? "",
+    heroBg: dbHero?.heroBg ?? hardcfg?.feature?.img ?? "",
+    stats: dbHero?.stats ?? hardcfg?.stats ?? [],
+    ghostBtn: dbHero?.ghostLabel ?? hardcfg?.ghostBtn,
+    ghostHref: dbHero?.ghostHref ?? hardcfg?.ghostHref,
+    feature: dbFeature ? {
+      img: dbFeature.img, badge: dbFeature.badge, h2: dbFeature.h2, p: dbFeature.p, li: dbFeature.li,
+    } : hardcfg?.feature,
+    ctaTitle: dbCta?.h2 ?? hardcfg?.ctaTitle ?? "Tražite specifičan model?",
+    realizacije: hardcfg?.realizacije,
+  };
 
   // Proizvodi mogu biti u više kategorija — primarno + via CategoryMap
   const [primaryProducts, extraMaps] = await Promise.all([
@@ -245,7 +282,6 @@ export default async function ProizvodiPage({ params }: { params: Promise<{ slug
   }
   const groups = Array.from(groupMap.entries());
   const groupDescs = GROUP_DESCS[slug] ?? {};
-  const cfg = CONFIG[slug];
 
   return (
     <SiteLayout currentPage={`/proizvodi/${slug}`} extraCss={["/rjesenja.css"]}>
@@ -331,7 +367,7 @@ export default async function ProizvodiPage({ params }: { params: Promise<{ slug
         <div className="container">
           {groups.length > 0 ? (
             groups.map(([groupName, groupProducts]) => (
-              <div key={groupName} className="product-group">
+              <div key={groupName} id={slugify(groupName)} className="product-group">
                 <div className="product-group-head">
                   <h2>{groupName}</h2>
                   {groupDescs[groupName] && <p>{groupDescs[groupName]}</p>}
