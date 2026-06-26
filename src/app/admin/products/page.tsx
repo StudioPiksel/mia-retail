@@ -10,10 +10,12 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 type Category = { id: string; name: string; slug: string; order: number };
+type CategoryMap = { id: string; categoryId: string; category: { id: string; name: string } };
 type Product = {
   id: string; title: string; series?: string; published: boolean; order: number;
   images: string; specs: string; categoryId: string; subGroup?: string;
   category: { id: string; name: string; slug: string };
+  categoryMaps: CategoryMap[];
 };
 type View = "kategorije" | "svi";
 
@@ -70,15 +72,102 @@ function MoveDropdown({ product, categories, onMove }: {
   );
 }
 
+// ── Add to category dropdown ──────────────────────────────────────────────────
+function AddToCatDropdown({ product, categories, onAdd, onRemoveExtra }: {
+  product: Product; categories: Category[];
+  onAdd: (productId: string, catId: string) => void;
+  onRemoveExtra: (productId: string, catId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  const extraCatIds = new Set(product.categoryMaps.map(m => m.categoryId));
+  const notInYet = categories.filter(c => c.id !== product.categoryId && !extraCatIds.has(c.id));
+  const alreadyExtra = product.categoryMaps.filter(m => m.categoryId !== product.categoryId);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button onClick={() => setOpen(o => !o)} title="Dodaj u još kategorija" style={{
+        padding: "4px 9px", background: open ? "#C7F1E6" : "#F0FDF4",
+        border: "1.5px solid #0F766E", borderRadius: 6, cursor: "pointer", fontSize: 11,
+        color: "#0F766E", fontFamily: "'Satoshi', sans-serif", fontWeight: 600,
+        display: "flex", alignItems: "center", gap: 4,
+      }}>
+        + Kategorija
+        {alreadyExtra.length > 0 && (
+          <span style={{ background: "#0F766E", color: "#fff", borderRadius: "50%", width: 15, height: 15, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {alreadyExtra.length}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", right: 0, top: "calc(100% + 4px)", zIndex: 300,
+          background: "#fff", border: "1px solid #E2E8ED", borderRadius: 10,
+          boxShadow: "0 8px 24px rgba(11,29,51,0.12)", minWidth: 240, overflow: "hidden",
+        }}>
+          {/* Current categories */}
+          <div style={{ padding: "8px 12px", background: "#F8FAFB", borderBottom: "1px solid #F1F5F7" }}>
+            <div style={{ fontSize: 10, color: "#6B7B8A", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Trenutne kategorije</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {/* Primary */}
+              <span style={{ padding: "3px 10px", background: "#0B1D33", color: "#C7F1E6", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>
+                {product.category.name} (primarna)
+              </span>
+              {/* Extra */}
+              {alreadyExtra.map(m => (
+                <span key={m.id} style={{ padding: "3px 8px", background: "#C7F1E6", color: "#0A5C56", borderRadius: 20, fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}>
+                  {m.category.name}
+                  <button onClick={() => onRemoveExtra(product.id, m.categoryId)} style={{ background: "none", border: "none", cursor: "pointer", color: "#0A5C56", fontSize: 12, padding: 0, lineHeight: 1 }}>×</button>
+                </span>
+              ))}
+            </div>
+          </div>
+          {/* Add to category */}
+          {notInYet.length > 0 ? (
+            <>
+              <div style={{ padding: "8px 12px 4px", fontSize: 10, color: "#6B7B8A", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Dodaj u kategoriju
+              </div>
+              {notInYet.map(cat => (
+                <button key={cat.id} onClick={() => { onAdd(product.id, cat.id); setOpen(false); }} style={{
+                  width: "100%", padding: "9px 14px", border: "none", background: "#fff",
+                  textAlign: "left", cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif", color: "#0B1D33",
+                }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#F0FDF4")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+                >
+                  + {cat.name}
+                </button>
+              ))}
+            </>
+          ) : (
+            <div style={{ padding: "12px 14px", fontSize: 13, color: "#6B7B8A" }}>U svim kategorijama je.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Sortable product row ──────────────────────────────────────────────────────
-function SortableRow({ p, categories, onToggle, onDelete, onMove }: {
+function SortableRow({ p, categories, onToggle, onDelete, onMove, onAddCat, onRemoveExtra }: {
   p: Product; categories: Category[];
   onToggle: () => void; onDelete: () => void;
   onMove: (productId: string, catId: string) => void;
+  onAddCat: (productId: string, catId: string) => void;
+  onRemoveExtra: (productId: string, catId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const img = (() => { try { return JSON.parse(p.images)[0]; } catch { return null; } })();
   const specs = (() => { try { return JSON.parse(p.specs) as string[]; } catch { return []; } })();
+  const extraCount = p.categoryMaps.filter(m => m.categoryId !== p.categoryId).length;
 
   return (
     <div ref={setNodeRef} style={{
@@ -93,21 +182,26 @@ function SortableRow({ p, categories, onToggle, onDelete, onMove }: {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</div>
-        <div style={{ fontSize: 12, color: "#6B7B8A", display: "flex", gap: 6, marginTop: 2, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ fontSize: 12, color: "#6B7B8A", display: "flex", gap: 5, marginTop: 2, flexWrap: "wrap", alignItems: "center" }}>
           {p.series && <span style={{ color: "#0F766E", fontWeight: 500 }}>{p.series}</span>}
-          {p.subGroup && <span style={{ color: "#9CA3AF" }}>· {p.subGroup}</span>}
-          {specs.slice(0, 3).map(s => (
-            <span key={s} style={{ background: "#E6EEF2", color: "#374151", padding: "1px 6px", borderRadius: 10, fontSize: 11 }}>{s}</span>
+          {specs.slice(0, 2).map(s => (
+            <span key={s} style={{ background: "#E6EEF2", color: "#374151", padding: "1px 6px", borderRadius: 10, fontSize: 10 }}>{s}</span>
           ))}
+          {extraCount > 0 && (
+            <span style={{ background: "#C7F1E6", color: "#0A5C56", padding: "1px 7px", borderRadius: 10, fontSize: 10, fontWeight: 600 }}>
+              +{extraCount} kat.
+            </span>
+          )}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
-        <button onClick={onToggle} style={{ padding: "4px 10px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 500, background: p.published ? "#DCFCE7" : "#F1F5F7", color: p.published ? "#16A34A" : "#6B7B8A" }}>
+      <div style={{ display: "flex", gap: 5, flexShrink: 0, alignItems: "center" }}>
+        <button onClick={onToggle} style={{ padding: "4px 8px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 10, fontWeight: 500, background: p.published ? "#DCFCE7" : "#F1F5F7", color: p.published ? "#16A34A" : "#6B7B8A" }}>
           {p.published ? "✓" : "○"}
         </button>
+        <AddToCatDropdown product={p} categories={categories} onAdd={onAddCat} onRemoveExtra={onRemoveExtra} />
         <MoveDropdown product={p} categories={categories} onMove={onMove} />
-        <Link href={`/admin/products/${p.id}`} style={{ padding: "5px 10px", background: "#E6EEF2", color: "#0B1D33", borderRadius: 6, fontSize: 12, fontWeight: 500, textDecoration: "none" }}>Uredi</Link>
-        <button onClick={onDelete} style={{ padding: "5px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>✕</button>
+        <Link href={`/admin/products/${p.id}`} style={{ padding: "5px 8px", background: "#E6EEF2", color: "#0B1D33", borderRadius: 6, fontSize: 11, fontWeight: 500, textDecoration: "none" }}>Uredi</Link>
+        <button onClick={onDelete} style={{ padding: "5px 7px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 11 }}>✕</button>
       </div>
     </div>
   );
@@ -170,12 +264,30 @@ export default function ProductsAdmin() {
     setProducts(prev => prev.filter(x => x.id !== id));
   }
 
-  // Move product to another category
+  // Move product to another category (changes primary)
   async function moveProduct(productId: string, catId: string) {
     const maxOrder = products.filter(p => p.categoryId === catId).length;
     await fetch(`/api/products/${productId}`, {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ categoryId: catId, order: maxOrder }),
+    });
+    await load();
+  }
+
+  // Add product to extra category (many-to-many)
+  async function addProductToCategory(productId: string, catId: string) {
+    await fetch("/api/product-categories", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, categoryId: catId }),
+    });
+    await load();
+  }
+
+  // Remove product from extra category
+  async function removeProductFromCategory(productId: string, catId: string) {
+    await fetch("/api/product-categories", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, categoryId: catId }),
     });
     await load();
   }
@@ -222,8 +334,18 @@ export default function ProductsAdmin() {
     await load();
   }
 
+  // Products in selected cat: primary + extra (via CategoryMap)
   const catProducts = selectedCat
-    ? products.filter(p => p.categoryId === selectedCat).sort((a, b) => a.order - b.order)
+    ? products
+        .filter(p =>
+          p.categoryId === selectedCat ||
+          p.categoryMaps.some(m => m.categoryId === selectedCat)
+        )
+        .sort((a, b) => {
+          const aP = a.categoryId === selectedCat ? 0 : 1;
+          const bP = b.categoryId === selectedCat ? 0 : 1;
+          return aP - bP || a.order - b.order;
+        })
     : [];
   const selectedCatObj = categories.find(c => c.id === selectedCat);
   const allFiltered = products.filter(p =>
@@ -362,7 +484,9 @@ export default function ProductsAdmin() {
                       <SortableRow key={p.id} p={p} categories={categories}
                         onToggle={() => togglePublish(p)}
                         onDelete={() => deleteProduct(p.id)}
-                        onMove={moveProduct} />
+                        onMove={moveProduct}
+                        onAddCat={addProductToCategory}
+                        onRemoveExtra={removeProductFromCategory} />
                     ))}
                   </SortableContext>
                 </DndContext>

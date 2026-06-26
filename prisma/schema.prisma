@@ -75,11 +75,23 @@ model Settings {
 }
 
 model ProductCategory {
-  id       String    @id @default(cuid())
-  name     String
-  slug     String    @unique
-  order    Int       @default(0)
-  products Product[]
+  id           String               @id @default(cuid())
+  name         String
+  slug         String               @unique
+  order        Int                  @default(0)
+  products     Product[]
+  categoryMaps ProductCategoryMap[]
+}
+
+model ProductCategoryMap {
+  id         String          @id @default(cuid())
+  productId  String
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, categoryId])
+  @@index([categoryId])
 }
 
 model Product {
@@ -98,6 +110,7 @@ model Product {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   rjesenjaItems RjesenjaItem[]
+  categoryMaps  ProductCategoryMap[]
 }
 
 model DesignStudio {

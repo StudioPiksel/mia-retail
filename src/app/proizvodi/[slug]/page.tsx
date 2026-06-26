@@ -216,10 +216,25 @@ export default async function ProizvodiPage({ params }: { params: Promise<{ slug
   const category = await prisma.productCategory.findUnique({ where: { slug } });
   if (!category) notFound();
 
-  const products = await prisma.product.findMany({
-    where: { categoryId: category.id, published: true },
-    orderBy: [{ subGroupOrder: "asc" }, { order: "asc" }],
-  });
+  // Proizvodi mogu biti u više kategorija — primarno + via CategoryMap
+  const [primaryProducts, extraMaps] = await Promise.all([
+    prisma.product.findMany({
+      where: { categoryId: category.id, published: true },
+      orderBy: [{ subGroupOrder: "asc" }, { order: "asc" }],
+    }),
+    prisma.productCategoryMap.findMany({
+      where: { categoryId: category.id },
+      include: { product: true },
+    }),
+  ]);
+
+  // Merge — dodaj extra proizvode koji nisu već u primarnoj listi
+  const primaryIds = new Set(primaryProducts.map(p => p.id));
+  const extraProducts = extraMaps
+    .map(m => m.product)
+    .filter(p => p.published && !primaryIds.has(p.id));
+
+  const products = [...primaryProducts, ...extraProducts];
 
   // Group by subGroup
   const groupMap = new Map<string, typeof products>();
