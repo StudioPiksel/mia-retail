@@ -10,6 +10,21 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg",
     apple: "/favicon.svg",
   },
+  openGraph: {
+    title: "MIA Retail Solutions — Partner za opremanje maloprodajnih i HoReCa objekata",
+    description: "Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora na ključ. 200+ projekata na 3 kontinenta.",
+    url: "https://miaretailsolutions.com",
+    siteName: "MIA Retail Solutions",
+    images: [{ url: "https://miaretailsolutions.com/og-image.png", width: 1500, height: 843, alt: "MIA Retail Solutions" }],
+    locale: "sr_RS",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MIA Retail Solutions",
+    description: "Partner za opremanje maloprodajnih i HoReCa objekata na ključ.",
+    images: ["https://miaretailsolutions.com/og-image.png"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
