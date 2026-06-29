@@ -90,17 +90,63 @@ export default function DizajnEnterijeraAdmin() {
   const [studios, setStudios] = useState<Studio[]>([]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
+  // New studio state
+  const [showNewStudio, setShowNewStudio] = useState(false);
+  const [newStudio, setNewStudio] = useState({ badge: "", name: "", tag: "" });
+  const [savingStudio, setSavingStudio] = useState(false);
+
+  // Edit studio state
+  const [editingStudio, setEditingStudio] = useState<Studio | null>(null);
+  const [editForm, setEditForm] = useState({ badge: "", name: "", tag: "" });
+
   const load = useCallback(async () => {
-    // Fetch all studios including unpublished projects
     const res = await fetch("/api/design-studios-admin");
     if (res.ok) setStudios(await res.json());
     else {
-      // fallback: public API
       const r2 = await fetch("/api/design-studios");
       setStudios(await r2.json());
     }
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  async function createStudio() {
+    if (!newStudio.name.trim() || !newStudio.badge.trim()) return;
+    setSavingStudio(true);
+    await fetch("/api/design-studios", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newStudio),
+    });
+    setNewStudio({ badge: "", name: "", tag: "" });
+    setShowNewStudio(false);
+    setSavingStudio(false);
+    await load();
+  }
+
+  async function updateStudio() {
+    if (!editingStudio) return;
+    setSavingStudio(true);
+    await fetch("/api/design-studios", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: editingStudio.id, ...editForm }),
+    });
+    setEditingStudio(null);
+    setSavingStudio(false);
+    await load();
+  }
+
+  async function deleteStudio(studio: Studio) {
+    if (studio.projects.length > 0) {
+      alert(`Studio "${studio.name}" ima ${studio.projects.length} projekata. Obrišite ih prvo.`);
+      return;
+    }
+    if (!confirm(`Obrisati studio "${studio.name}"?`)) return;
+    const res = await fetch("/api/design-studios", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: studio.id }),
+    });
+    if (!res.ok) { const e = await res.json(); alert(e.error); return; }
+    await load();
+  }
 
   async function handleDragEnd(studioId: string, e: DragEndEvent, projects: Project[]) {
     const { active, over } = e;
@@ -131,10 +177,77 @@ export default function DizajnEnterijeraAdmin() {
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>Dizajn enterijera</h1>
-        <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Upravljanje design studijima i projektima · prevuci za promjenu redoslijeda</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>Dizajn enterijera</h1>
+          <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Upravljanje design studijima i projektima · prevuci za promjenu redoslijeda</p>
+        </div>
+        <button onClick={() => setShowNewStudio(s => !s)} style={{ padding: "11px 22px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'Satoshi', sans-serif" }}>
+          + Novi partner / studio
+        </button>
       </div>
+
+      {/* New studio form */}
+      {showNewStudio && (
+        <div style={{ background: "#F0FDF4", borderRadius: 12, border: "1.5px solid #BBF7D0", padding: 24, marginBottom: 24 }}>
+          <strong style={{ fontSize: 15, color: "#0B1D33", display: "block", marginBottom: 16 }}>Novi design partner</strong>
+          <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 2fr", gap: 12, marginBottom: 12 }}>
+            <div>
+              <label style={lbl}>Badge (2-3 sl.)</label>
+              <input value={newStudio.badge} onChange={e => setNewStudio({ ...newStudio, badge: e.target.value.toUpperCase().slice(0, 3) })}
+                placeholder="DZ" style={inp} maxLength={3} />
+            </div>
+            <div>
+              <label style={lbl}>Naziv studija *</label>
+              <input value={newStudio.name} onChange={e => setNewStudio({ ...newStudio, name: e.target.value })}
+                placeholder="STUDIO NAME" style={inp} />
+            </div>
+            <div>
+              <label style={lbl}>Kratki opis / tag</label>
+              <input value={newStudio.tag} onChange={e => setNewStudio({ ...newStudio, tag: e.target.value })}
+                placeholder="Internacionalni retail design studio · ..." style={inp} />
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => { setShowNewStudio(false); setNewStudio({ badge: "", name: "", tag: "" }); }} style={btnGhost}>Odustani</button>
+            <button onClick={createStudio} disabled={savingStudio || !newStudio.name || !newStudio.badge} style={btnPrimary}>
+              {savingStudio ? "Kreiranje..." : "Kreiraj studio"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit studio modal */}
+      {editingStudio && (
+        <>
+          <div onClick={() => setEditingStudio(null)} style={{ position: "fixed", inset: 0, background: "rgba(11,29,51,0.4)", zIndex: 9998 }} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: "#fff", borderRadius: 16, padding: 28, width: 520, zIndex: 9999, fontFamily: "'Satoshi', sans-serif", boxShadow: "0 24px 64px rgba(11,29,51,0.2)" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#0B1D33", margin: "0 0 20px" }}>Uredi studio</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: 12 }}>
+                <div>
+                  <label style={lbl}>Badge</label>
+                  <input value={editForm.badge} onChange={e => setEditForm({ ...editForm, badge: e.target.value.toUpperCase().slice(0, 3) })} maxLength={3} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Naziv</label>
+                  <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={inp} />
+                </div>
+              </div>
+              <div>
+                <label style={lbl}>Opis / tag linija</label>
+                <input value={editForm.tag} onChange={e => setEditForm({ ...editForm, tag: e.target.value })} style={inp} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              <button onClick={() => setEditingStudio(null)} style={{ ...btnGhost, flex: 1 }}>Odustani</button>
+              <button onClick={updateStudio} disabled={savingStudio} style={{ ...btnPrimary, flex: 2 }}>
+                {savingStudio ? "Čuvanje..." : "Sačuvaj"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {studios.map(studio => (
         <div key={studio.id} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", marginBottom: 28, overflow: "hidden" }}>
@@ -150,6 +263,16 @@ export default function DizajnEnterijeraAdmin() {
             <span style={{ background: "#C7F1E6", color: "#0A5C56", padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
               {studio.projects.filter(p => p.published).length} / {studio.projects.length} projekata
             </span>
+            {/* Studio actions */}
+            <button onClick={() => { setEditingStudio(studio); setEditForm({ badge: studio.badge, name: studio.name, tag: studio.tag }); }}
+              style={{ padding: "6px 14px", background: "#E6EEF2", color: "#0B1D33", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
+              ✏️ Uredi
+            </button>
+            <button onClick={() => deleteStudio(studio)}
+              style={{ padding: "6px 10px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13 }}
+              title="Obriši studio (samo ako nema projekata)">
+              🗑
+            </button>
           </div>
 
           {/* Project grid */}
@@ -179,6 +302,7 @@ export default function DizajnEnterijeraAdmin() {
   );
 }
 
+const lbl: React.CSSProperties = { display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 5 };
 const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", border: "1.5px solid #E2E8ED", borderRadius: 8, fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box", color: "#111827", background: "#fff", display: "block" };
 const btnPrimary: React.CSSProperties = { flex: 1, padding: "9px 18px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Satoshi', sans-serif" };
-const btnGhost: React.CSSProperties = { padding: "9px 14px", border: "1.5px solid #E2E8ED", background: "#fff", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Satoshi', sans-serif" };
+const btnGhost: React.CSSProperties = { padding: "9px 16px", border: "1.5px solid #E2E8ED", background: "#fff", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Satoshi', sans-serif" };
