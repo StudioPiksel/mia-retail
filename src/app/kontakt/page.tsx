@@ -30,7 +30,7 @@ export default function KontaktPage() {
 
       <section style={{ padding: "80px 0" }}>
         <div className="container">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 48, alignItems: "start" }}>
             {/* Kontakt info */}
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--navy)", marginBottom: 32 }}>Kontakt informacije</h2>

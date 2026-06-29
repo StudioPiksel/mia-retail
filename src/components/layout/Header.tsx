@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { MegaRjesenjaItem, MegaProizvodiItem } from "./SiteLayout";
@@ -24,6 +24,18 @@ export default function Header({
   megaProizvodi?: MegaProizvodiItem[];
 }) {
   const headerRef = useRef<HTMLElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Zatvori meni pri promjeni rute ili resize na desktop
+  useEffect(() => {
+    setMobileOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (mobileOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -61,17 +73,6 @@ export default function Header({
         el.classList.add("is-active");
       });
     });
-
-    // Mobile toggle
-    const toggle = header.querySelector<HTMLButtonElement>(".mobile-menu-toggle");
-    const nav = header.querySelector<HTMLElement>(".main-nav");
-    if (toggle && nav) {
-      toggle.addEventListener("click", () => {
-        const open = toggle.getAttribute("aria-expanded") === "true";
-        toggle.setAttribute("aria-expanded", String(!open));
-        nav.classList.toggle("is-open");
-      });
-    }
 
     return () => window.removeEventListener("scroll", onScroll);
   }, [megaRjesenja]);
@@ -115,7 +116,7 @@ export default function Header({
             <Image src="/assets/images/logo/mia-retail-solutions-vectorized-clean.svg" alt="MIA Retail Solutions" className="logo" width={160} height={40} priority />
           </Link>
 
-          <nav className="main-nav" aria-label="Glavna navigacija">
+          <nav className={`main-nav${mobileOpen ? " is-open" : ""}`} aria-label="Glavna navigacija">
             <ul className="nav-list">
               {/* RJEŠENJA — dinamički iz DB */}
               <li className="nav-item has-mega" data-mega="rjesenja">
@@ -197,7 +198,12 @@ export default function Header({
             </a>
           </div>
 
-          <button className="mobile-menu-toggle" aria-label="Otvori meni" aria-expanded="false">
+          <button
+            className={`mobile-menu-toggle${mobileOpen ? " is-open" : ""}`}
+            aria-label={mobileOpen ? "Zatvori meni" : "Otvori meni"}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen(prev => !prev)}
+          >
             <span></span><span></span><span></span>
           </button>
         </div>
