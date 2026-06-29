@@ -22,6 +22,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="alternate icon" href="/favicon.ico" />
+        {/* CSS u root layoutu — učitava se jednom, bez flasha pri navigaciji */}
+        <link rel="stylesheet" href="/style.css" precedence="default" />
+        <link rel="stylesheet" href="/design.css" precedence="default" />
+        <link rel="stylesheet" href="/rebuild.css" precedence="default" />
+        <link rel="stylesheet" href="/badges.css" precedence="default" />
+        {/* Anti-flash: postavi pozadinu odmah */}
+        <style>{`
+          body { background: #fff; margin: 0; padding: 0; }
+          html { scroll-behavior: smooth; }
+        `}</style>
       </head>
       <body style={{ margin: 0, padding: 0 }}>
         <SessionProvider>{children}</SessionProvider>

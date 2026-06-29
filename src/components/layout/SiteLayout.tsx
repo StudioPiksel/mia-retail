@@ -44,10 +44,7 @@ export default async function SiteLayout({
 
   return (
     <>
-      <link rel="stylesheet" href="/style.css" />
-      <link rel="stylesheet" href="/design.css" />
-      <link rel="stylesheet" href="/rebuild.css" />
-      <link rel="stylesheet" href="/badges.css" />
+      {/* Main CSS je u root layout.tsx — samo extra CSS po stranici */}
       {extraCss.map((css) => (
         <link key={css} rel="stylesheet" href={css} />
       ))}
