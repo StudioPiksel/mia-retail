@@ -6,10 +6,8 @@ export const metadata: Metadata = {
   title: "MIA Retail Solutions — Partner za opremanje maloprodajnih i HoReCa objekata",
   description: "Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora na ključ. 200+ projekata na 3 kontinenta.",
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "32x32" },
-    ],
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
     apple: "/favicon.svg",
   },
 };
@@ -20,18 +18,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.cdnfonts.com" />
         <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="alternate icon" href="/favicon.ico" />
-        {/* CSS u root layoutu — učitava se jednom, bez flasha pri navigaciji */}
-        <link rel="stylesheet" href="/style.css" precedence="default" />
-        <link rel="stylesheet" href="/design.css" precedence="default" />
-        <link rel="stylesheet" href="/rebuild.css" precedence="default" />
-        <link rel="stylesheet" href="/badges.css" precedence="default" />
-        {/* Anti-flash: postavi pozadinu odmah */}
-        <style>{`
-          body { background: #fff; margin: 0; padding: 0; }
-          html { scroll-behavior: smooth; }
-        `}</style>
+        {/* Favicon — SVG direktno */}
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        {/* CSS u root layoutu — učitava se jednom */}
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="/design.css" />
+        <link rel="stylesheet" href="/rebuild.css" />
+        <link rel="stylesheet" href="/badges.css" />
+        <style>{`body{background:#fff;margin:0;padding:0;}html{scroll-behavior:smooth;}`}</style>
       </head>
       <body style={{ margin: 0, padding: 0 }}>
         <SessionProvider>{children}</SessionProvider>
