@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 type Product = {
   id: string; title: string; series?: string | null;
@@ -9,9 +9,21 @@ type Product = {
 export function ProductCard({ product }: { product: Product }) {
   const [activeImg, setActiveImg] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
   const images: string[] = (() => { try { return JSON.parse(product.images); } catch { return []; } })();
   const specs: string[] = (() => { try { return JSON.parse(product.specs); } catch { return []; } })();
+
+  function lbPrev() { setLightbox(i => i !== null && i > 0 ? i - 1 : i); }
+  function lbNext() { setLightbox(i => i !== null && i < images.length - 1 ? i + 1 : i); }
+  function onTouchStart(e: React.TouchEvent) { touchStartX.current = e.touches[0].clientX; }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (diff > 50) lbNext();
+    else if (diff < -50) lbPrev();
+    touchStartX.current = null;
+  }
 
   if (images.length === 0) return null;
 
@@ -69,54 +81,41 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Lightbox */}
       {lightbox !== null && (
         <div
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
           onClick={() => setLightbox(null)}
-          style={{
-            position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 9999,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "zoom-out",
-          }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}
         >
-          <button
-            onClick={(e) => { e.stopPropagation(); setLightbox(null); }}
-            style={{
-              position: "fixed", top: 20, right: 24, background: "rgba(255,255,255,0.15)",
-              border: "none", color: "#fff", borderRadius: "50%", width: 40, height: 40,
-              cursor: "pointer", fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center"
-            }}
-          >×</button>
+          <button onClick={e => { e.stopPropagation(); setLightbox(null); }}
+            style={{ position: "fixed", top: 20, right: 24, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: "50%", width: 40, height: 40, cursor: "pointer", fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
 
-          {/* Prev */}
           {lightbox > 0 && (
-            <button onClick={e => { e.stopPropagation(); setLightbox(lightbox - 1); }} style={navBtn("left")}>‹</button>
+            <button onClick={e => { e.stopPropagation(); lbPrev(); }} style={navBtn("left")}>‹</button>
           )}
 
-          <img
-            src={images[lightbox]}
-            alt={product.title}
-            onClick={e => e.stopPropagation()}
-            style={{ maxWidth: "90vw", maxHeight: "85vh", objectFit: "contain", borderRadius: 8 }}
-          />
+          <img src={images[lightbox]} alt={product.title} onClick={e => e.stopPropagation()}
+            style={{ maxWidth: "92vw", maxHeight: "82vh", objectFit: "contain", borderRadius: 8, userSelect: "none" }}
+            draggable={false} />
 
-          {/* Next */}
           {lightbox < images.length - 1 && (
-            <button onClick={e => { e.stopPropagation(); setLightbox(lightbox + 1); }} style={navBtn("right")}>›</button>
+            <button onClick={e => { e.stopPropagation(); lbNext(); }} style={navBtn("right")}>›</button>
           )}
 
-          {/* Dots */}
-          {images.length > 1 && (
-            <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 8 }}>
-              {images.map((_, i) => (
-                <button key={i} onClick={e => { e.stopPropagation(); setLightbox(i); }} style={{
-                  width: 8, height: 8, borderRadius: "50%", border: "none", cursor: "pointer",
-                  background: i === lightbox ? "#fff" : "rgba(255,255,255,0.35)", padding: 0
-                }} />
-              ))}
+          <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", textAlign: "center", pointerEvents: "none" }}>
+            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginBottom: 10 }}>
+              {product.title}{product.series ? ` — ${product.series}` : ""} ({lightbox + 1}/{images.length})
             </div>
-          )}
-
-          {/* Caption */}
-          <div style={{ position: "fixed", bottom: 48, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.7)", fontSize: 13 }}>
-            {product.title}{product.series ? ` — ${product.series}` : ""} ({lightbox + 1}/{images.length})
+            {images.length > 1 && (
+              <div style={{ display: "flex", gap: 6, justifyContent: "center", pointerEvents: "all" }}>
+                {images.map((_, i) => (
+                  <button key={i} onClick={e => { e.stopPropagation(); setLightbox(i); }} style={{
+                    width: i === lightbox ? 20 : 8, height: 8, borderRadius: 4, border: "none", cursor: "pointer", padding: 0,
+                    transition: "all 0.2s", background: i === lightbox ? "#fff" : "rgba(255,255,255,0.35)"
+                  }} />
+                ))}
+              </div>
+            )}
+            {images.length > 1 && <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 8 }}>← swipe →</div>}
           </div>
         </div>
       )}
