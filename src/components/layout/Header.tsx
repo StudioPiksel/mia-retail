@@ -25,6 +25,7 @@ export default function Header({
 }) {
   const headerRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accOpen, setAccOpen] = useState<"rjesenja" | "proizvodi" | null>(null);
 
   // Zatvori meni pri promjeni rute ili resize na desktop
   useEffect(() => {
@@ -223,8 +224,8 @@ export default function Header({
 
         <div className="mnav-body">
           {/* Rješenja accordion */}
-          <div className="mnav-acc">
-            <button className="mnav-acc-trigger" onClick={e => e.currentTarget.closest(".mnav-acc")?.classList.toggle("is-open")}>
+          <div className={`mnav-acc${accOpen === "rjesenja" ? " is-open" : ""}`}>
+            <button className="mnav-acc-trigger" onClick={() => setAccOpen(a => a === "rjesenja" ? null : "rjesenja")}>
               Rješenja
               <svg className="mnav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
@@ -241,8 +242,8 @@ export default function Header({
           </div>
 
           {/* Proizvodi accordion */}
-          <div className="mnav-acc">
-            <button className="mnav-acc-trigger" onClick={e => e.currentTarget.closest(".mnav-acc")?.classList.toggle("is-open")}>
+          <div className={`mnav-acc${accOpen === "proizvodi" ? " is-open" : ""}`}>
+            <button className="mnav-acc-trigger" onClick={() => setAccOpen(a => a === "proizvodi" ? null : "proizvodi")}>
               Proizvodi
               <svg className="mnav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
