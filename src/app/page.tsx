@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import SiteLayout from "@/components/layout/SiteLayout";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import HeroForm from "@/components/HeroForm";
 
 export const metadata: Metadata = {
   title: "MIA Retail Solutions — Partner za opremanje maloprodajnih i HoReCa objekata",
@@ -49,42 +50,7 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="hero-form-wrapper">
-            <div className="hero-form-card">
-              <div className="form-header">
-                <span className="form-badge">Besplatna procjena</span>
-                <h3>Brza konsultacija</h3>
-                <p>Opišite projekat — javljamo se za 24h</p>
-              </div>
-              <form className="hero-form" id="heroForm">
-                <div className="form-group"><label htmlFor="name">Ime i prezime</label><input type="text" id="name" name="name" required /></div>
-                <div className="form-group"><label htmlFor="company">Naziv firme</label><input type="text" id="company" name="company" /></div>
-                <div className="form-group"><label htmlFor="email">Email adresa</label><input type="email" id="email" name="email" required /></div>
-                <div className="form-group">
-                  <label htmlFor="object-type">Tip objekta</label>
-                  <select id="object-type" name="object-type">
-                    <option value="">Izaberite...</option>
-                    <option value="supermarket">Supermarket / Maloprodaja</option>
-                    <option value="mesnica">Mesnica / Ribarnica</option>
-                    <option value="horeca">HoReCa / Ugostiteljstvo</option>
-                    <option value="pekara">Pekara / Poslastičarnica</option>
-                    <option value="apoteka">Apoteka / Drogerija</option>
-                    <option value="ostalo">Ostalo</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="area">Površina objekta (m²)</label>
-                  <select id="area" name="area">
-                    <option value="">Izaberite...</option>
-                    <option value="do-200">Do 200 m²</option>
-                    <option value="200-500">200 — 500 m²</option>
-                    <option value="500-1500">500 — 1.500 m²</option>
-                    <option value="1500+">1.500 m² +</option>
-                  </select>
-                </div>
-                <button type="submit" className="btn-primary btn-full">Pošaljite upit</button>
-                <p className="form-note">Bez obaveze · Besplatna procjena · Odgovor za 24h</p>
-              </form>
-            </div>
+            <HeroForm />
           </div>
         </div>
       </section>
