@@ -87,7 +87,11 @@ export default function KontaktPage() {
                     <option>Ostalo</option>
                   </select>
                 </div>
-                <div className="form-group"><label htmlFor="cmessage">Poruka</label><textarea id="cmessage" name="message" rows={5} placeholder="Opišite vaš projekat ili upit..." /></div>
+                <div className="form-group">
+                  <label htmlFor="cmessage">Poruka</label>
+                  <textarea id="cmessage" name="message" rows={5} placeholder="Opišite vaš projekat ili upit..."
+                    style={{ width: "100%", boxSizing: "border-box", resize: "vertical" }} />
+                </div>
                 <button type="submit" className="btn-primary btn-full">Pošaljite upit</button>
                 <p className="form-note">Bez obaveze · Odgovor za 24h · Besplatna procjena</p>
               </form>

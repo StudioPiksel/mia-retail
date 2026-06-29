@@ -73,7 +73,12 @@ export default async function ONamaPage() {
               <h2>{intro.h2}</h2>
               {intro.p1 && <p>{intro.p1}</p>}
               {intro.p2 && <p>{intro.p2}</p>}
-              <Link href={intro.btnHref} className="btn-ghost btn-ghost--dark">
+              <Link href={intro.btnHref} style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "12px 24px", border: "2px solid #0B1D33", borderRadius: 8,
+                color: "#0B1D33", textDecoration: "none", fontWeight: 600, fontSize: 15,
+                fontFamily: "'Satoshi', sans-serif", transition: "all 0.2s",
+              }}>
                 {intro.btnLabel}{" "}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
