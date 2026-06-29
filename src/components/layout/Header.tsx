@@ -208,6 +208,77 @@ export default function Header({
           </button>
         </div>
       </header>
+
+      {/* MOBILE DRAWER */}
+      <div className={`mnav-backdrop${mobileOpen ? " is-open" : ""}`} onClick={() => setMobileOpen(false)} />
+      <div className={`mnav${mobileOpen ? " is-open" : ""}`} aria-hidden={!mobileOpen}>
+        <div className="mnav-head">
+          <span className="mnav-head-title">Meni</span>
+          <button className="mnav-close" onClick={() => setMobileOpen(false)} aria-label="Zatvori meni">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="mnav-body">
+          {/* Rješenja accordion */}
+          <div className="mnav-acc">
+            <button className="mnav-acc-trigger" onClick={e => e.currentTarget.closest(".mnav-acc")?.classList.toggle("is-open")}>
+              Rješenja
+              <svg className="mnav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div className="mnav-acc-panel">
+              <div className="mnav-acc-inner">
+                {megaRjesenja.map(item => (
+                  <a key={item.slug} href={`/rjesenja/${item.slug}`} className="mnav-sub" onClick={() => setMobileOpen(false)}>
+                    <span className="mnav-sub-thumb" style={{ backgroundImage: `url('${item.img}')` }} />
+                    <span className="mnav-sub-text"><strong>{item.title}</strong><small>{item.sub}</small></span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Proizvodi accordion */}
+          <div className="mnav-acc">
+            <button className="mnav-acc-trigger" onClick={e => e.currentTarget.closest(".mnav-acc")?.classList.toggle("is-open")}>
+              Proizvodi
+              <svg className="mnav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div className="mnav-acc-panel">
+              <div className="mnav-acc-inner">
+                {megaProizvodi.map(item => (
+                  <a key={item.slug} href={`/proizvodi/${item.slug}`} className="mnav-sub" onClick={() => setMobileOpen(false)}>
+                    <span className="mnav-sub-thumb" style={{ backgroundImage: `url('${item.img}')` }} />
+                    <span className="mnav-sub-text"><strong>{item.title}</strong><small>{item.sub}</small></span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Ostale stranice */}
+          {[
+            { href: "/pomoc-u-izboru", label: "Pomoć u izboru" },
+            { href: "/realizacije", label: "Realizacije" },
+            { href: "/dizajn-enterijera", label: "Dizajn enterijera" },
+            { href: "/o-nama", label: "O nama" },
+            { href: "/blog", label: "Blog" },
+            { href: "/kontakt", label: "Kontakt" },
+          ].map(link => (
+            <a key={link.href} href={link.href} className="mnav-link" onClick={() => setMobileOpen(false)}>{link.label}</a>
+          ))}
+        </div>
+
+        <div className="mnav-foot">
+          <a href="/kontakt" className="mnav-cta" onClick={() => setMobileOpen(false)}>
+            Zatražite ponudu
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <a href="tel:+38267038777" className="mnav-phone">+382 67 038 777</a>
+        </div>
+      </div>
     </>
   );
 }
