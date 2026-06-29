@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 
 type Realizacija = { id: string; name: string; country: string; images: string; categories: string; order: number };
@@ -15,11 +15,26 @@ const FILTERS = [
 export default function RealizacijeClient({ items }: { items: Realizacija[] }) {
   const [filter, setFilter] = useState("all");
   const [lightbox, setLightbox] = useState<{ imgs: string[]; name: string; country: string; idx: number } | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
   function openLightbox(item: Realizacija, startIdx = 0) {
     const imgs: string[] = (() => { try { return JSON.parse(item.images); } catch { return []; } })();
     if (!imgs.length) return;
     setLightbox({ imgs, name: item.name, country: item.country, idx: startIdx });
+  }
+
+  function lbPrev() { setLightbox(lb => lb && lb.idx > 0 ? { ...lb, idx: lb.idx - 1 } : lb); }
+  function lbNext() { setLightbox(lb => lb && lb.idx < lb.imgs.length - 1 ? { ...lb, idx: lb.idx + 1 } : lb); }
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (diff > 50) lbNext();
+    else if (diff < -50) lbPrev();
+    touchStartX.current = null;
   }
 
   const filtered = items.filter(item => {
@@ -106,24 +121,44 @@ export default function RealizacijeClient({ items }: { items: Realizacija[] }) {
       {lightbox && (
         <>
           <div onClick={() => setLightbox(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 9998 }} />
-          <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-            <button onClick={() => setLightbox(null)} style={{ position: "fixed", top: 20, right: 24, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", fontSize: 20, pointerEvents: "all", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+          <div
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "all" }}
+          >
+            {/* Zatvori */}
+            <button onClick={() => setLightbox(null)} style={{ position: "fixed", top: 20, right: 24, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+
+            {/* Strelice — skrivene na mobu, swipe ih zamjenjuje */}
             {lightbox.idx > 0 && (
-              <button onClick={() => setLightbox({ ...lightbox, idx: lightbox.idx - 1 })} style={{ position: "fixed", top: "50%", left: 20, transform: "translateY(-50%)", background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: "50%", width: 52, height: 52, cursor: "pointer", fontSize: 32, pointerEvents: "all", display: "flex", alignItems: "center", justifyContent: "center" }}>‹</button>
+              <button onClick={lbPrev} style={{ position: "fixed", top: "50%", left: 16, transform: "translateY(-50%)", background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: "50%", width: 52, height: 52, cursor: "pointer", fontSize: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>‹</button>
             )}
-            <img src={lightbox.imgs[lightbox.idx]} alt={lightbox.name} style={{ maxWidth: "88vw", maxHeight: "82vh", objectFit: "contain", borderRadius: 8, pointerEvents: "none" }} />
+
+            <img
+              src={lightbox.imgs[lightbox.idx]}
+              alt={lightbox.name}
+              style={{ maxWidth: "92vw", maxHeight: "80vh", objectFit: "contain", borderRadius: 8, pointerEvents: "none", userSelect: "none" }}
+              draggable={false}
+            />
+
             {lightbox.idx < lightbox.imgs.length - 1 && (
-              <button onClick={() => setLightbox({ ...lightbox, idx: lightbox.idx + 1 })} style={{ position: "fixed", top: "50%", right: 20, transform: "translateY(-50%)", background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: "50%", width: 52, height: 52, cursor: "pointer", fontSize: 32, pointerEvents: "all", display: "flex", alignItems: "center", justifyContent: "center" }}>›</button>
+              <button onClick={lbNext} style={{ position: "fixed", top: "50%", right: 16, transform: "translateY(-50%)", background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: "50%", width: 52, height: 52, cursor: "pointer", fontSize: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>›</button>
             )}
-            <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", color: "#fff", textAlign: "center", pointerEvents: "none" }}>
-              <div style={{ fontWeight: 700 }}>{lightbox.name} · {lightbox.country}</div>
+
+            {/* Info + dot navigacija */}
+            <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", color: "#fff", textAlign: "center", pointerEvents: "none", width: "90vw" }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{lightbox.name} · {lightbox.country}</div>
               {lightbox.imgs.length > 1 && (
-                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 8 }}>
+                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 10, pointerEvents: "all" }}>
                   {lightbox.imgs.map((_, i) => (
                     <button key={i} onClick={() => setLightbox({ ...lightbox, idx: i })}
-                      style={{ width: 8, height: 8, borderRadius: "50%", border: "none", cursor: "pointer", padding: 0, pointerEvents: "all", background: i === lightbox.idx ? "#fff" : "rgba(255,255,255,0.35)" }} />
+                      style={{ width: i === lightbox.idx ? 20 : 8, height: 8, borderRadius: 4, border: "none", cursor: "pointer", padding: 0, transition: "all 0.2s", background: i === lightbox.idx ? "#fff" : "rgba(255,255,255,0.35)" }} />
                   ))}
                 </div>
+              )}
+              {/* Swipe hint — samo na mobu, nestaje poslije 1. swipea */}
+              {lightbox.imgs.length > 1 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>← swipe →</div>
               )}
             </div>
           </div>
