@@ -55,8 +55,12 @@ export async function DELETE(req: Request) {
   if (!url || !url.startsWith("/uploads/")) {
     return NextResponse.json({ error: "Možete brisati samo uploadovane fajlove" }, { status: 400 });
   }
-  const name = url.replace("/uploads/", "");
-  if (name.includes("..")) return NextResponse.json({ error: "Invalid" }, { status: 400 });
-  await unlink(join(PUBLIC, "uploads", name));
+  // Resolve punu putanju i provjeri da ostaje unutar UPLOAD_DIR (štiti od %2e%2e i sličnih)
+  const uploadsDir = join(PUBLIC, "uploads");
+  const resolved = require("path").resolve(uploadsDir, url.replace("/uploads/", ""));
+  if (!resolved.startsWith(uploadsDir + require("path").sep) && resolved !== uploadsDir) {
+    return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+  }
+  await unlink(resolved);
   return NextResponse.json({ ok: true });
 }

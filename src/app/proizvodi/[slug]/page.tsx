@@ -287,7 +287,7 @@ export default async function ProizvodiPage({ params }: { params: Promise<{ slug
     <SiteLayout currentPage={`/proizvodi/${slug}`} extraCss={["/rjesenja.css"]}>
       {/* ── HERO (identično originalu) ── */}
       <section className="solution-hero solution-hero--photo">
-        {cfg && <div className="solution-hero-bg" style={{ backgroundImage: `url('${cfg.feature.img}')` }} />}
+        {cfg && <div className="solution-hero-bg" style={{ backgroundImage: `url('${cfg.heroBg || cfg.feature?.img || ""}')` }} />}
         <div className="container">
           <div className="solution-hero-inner">
             <div className="solution-hero-text">

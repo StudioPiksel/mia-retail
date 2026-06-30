@@ -2,9 +2,24 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
-  const settings = await prisma.settings.findMany();
-  const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));
+// Ključevi dostupni bez autentifikacije (frontend ih čita)
+const PUBLIC_KEYS_PREFIX = [
+  "megamenu_", "rjesenja_", "proizvodi_", "onama_", "pomoc_", "kontakt_",
+  "whatsapp_", "rjesenja_pages", "megamenu_rjesenja", "megamenu_proizvodi",
+];
+
+function isPublicKey(key: string) {
+  return PUBLIC_KEYS_PREFIX.some(p => key.startsWith(p) || key === p);
+}
+
+export async function GET(req: Request) {
+  const session = await auth();
+  const all = await prisma.settings.findMany();
+  const map = Object.fromEntries(
+    all
+      .filter(s => session || isPublicKey(s.key))
+      .map(s => [s.key, s.value])
+  );
   return NextResponse.json(map);
 }
 

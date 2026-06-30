@@ -6,7 +6,16 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Script from "next/script";
 
-const SLUGS = ["supermarketi", "mesnice-ribarnice", "horeca", "pekare", "apoteke-drogerije"];
+async function getValidSlugs(): Promise<string[]> {
+  try {
+    const s = await prisma.settings.findUnique({ where: { key: "rjesenja_pages" } });
+    if (s) {
+      const pages: { slug: string }[] = JSON.parse(s.value);
+      return pages.map(p => p.slug);
+    }
+  } catch {}
+  return ["supermarketi", "mesnice-ribarnice", "horeca", "pekare", "apoteke-drogerije"];
+}
 
 async function getPageData(slug: string) {
   const keys = ["hero", "zones", "realizacije", "cta"].map(s => `rjesenja_${slug}_${s}`);
@@ -27,7 +36,8 @@ async function getPageData(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  if (!SLUGS.includes(slug)) return {};
+  const validSlugs = await getValidSlugs();
+  if (!validSlugs.includes(slug)) return {};
   const { hero } = await getPageData(slug);
   if (!hero) return {};
   return {
@@ -45,7 +55,8 @@ const CAT_DESCRIPTIONS: Record<string, Record<string, string>> = {
 
 export default async function RjesenjaPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  if (!SLUGS.includes(slug)) notFound();
+  const validSlugs = await getValidSlugs();
+  if (!validSlugs.includes(slug)) notFound();
 
   const { hero, zones, realizacije, cta } = await getPageData(slug);
   if (!hero) notFound();
