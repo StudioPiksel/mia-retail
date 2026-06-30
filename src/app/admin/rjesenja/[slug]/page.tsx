@@ -92,11 +92,14 @@ export default function RjesenjaEditor() {
 
   async function saveSetting(section: string, value: unknown) {
     setSaving(true);
-    await fetch("/api/settings", {
+    const res = await fetch("/api/settings", {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [`rjesenja_${slug}_${section}`]: JSON.stringify(value) }),
     });
-    setSaving(false); setSaved(section);
+    setSaving(false);
+    if (res.status === 401) { window.location.href = "/admin/login"; return; }
+    if (!res.ok) { alert("Greška pri snimanju. Pokušajte ponovo."); return; }
+    setSaved(section);
     setTimeout(() => setSaved(""), 2000);
   }
 

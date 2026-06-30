@@ -23,11 +23,14 @@ export default function KontaktAdmin() {
     setSaving(true);
     const updated = { ...page, [key]: value };
     setPage(updated);
-    await fetch("/api/settings", {
+    const res = await fetch("/api/settings", {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kontakt_page: JSON.stringify(updated) }),
     });
-    setSaving(false); setSaved(key);
+    setSaving(false);
+    if (res.status === 401) { window.location.href = "/admin/login"; return; }
+    if (!res.ok) { alert("Greška pri snimanju. Pokušajte ponovo."); return; }
+    setSaved(key);
     setTimeout(() => setSaved(""), 2000);
   }
 
