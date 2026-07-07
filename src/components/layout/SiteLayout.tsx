@@ -3,11 +3,13 @@ import Footer from "./Footer";
 import WhatsAppFloat from "./WhatsAppFloat";
 import Script from "next/script";
 import { prisma } from "@/lib/prisma";
+import { unstable_noStore as noStore } from "next/cache";
 
 export type MegaRjesenjaItem = { slug: string; title: string; sub: string; img: string; desc: string };
 export type MegaProizvodiItem = { slug: string; title: string; sub: string; img: string };
 
 async function getWhatsApp() {
+  noStore();
   const [num, msg] = await Promise.all([
     prisma.settings.findUnique({ where: { key: "whatsapp_number" } }),
     prisma.settings.findUnique({ where: { key: "whatsapp_message" } }),
@@ -19,6 +21,7 @@ async function getWhatsApp() {
 }
 
 async function getMegaMenuData() {
+  noStore();
   const [mr, mp] = await Promise.all([
     prisma.settings.findUnique({ where: { key: "megamenu_rjesenja" } }),
     prisma.settings.findUnique({ where: { key: "megamenu_proizvodi" } }),
