@@ -16,7 +16,7 @@ export default function ImageUpload({
   label,
   maxWidthPx = 1280,
   qualityWebp = 0.82,
-  maxInputMB = 8,
+  maxInputMB = 2,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -182,7 +182,7 @@ export default function ImageUpload({
 
       {!uploading && !error && value && (
         <div style={{ marginTop: 4, fontSize: 11, color: "#6B7B8A" }}>
-          WebP · max {maxWidthPx}px širine · kompresija pri uploadu
+          WebP kompresija · max {maxWidthPx}px · max {maxInputMB}MB originalne slike
         </div>
       )}
 

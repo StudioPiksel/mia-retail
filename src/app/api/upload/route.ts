@@ -4,7 +4,7 @@ import { put } from "@vercel/blob";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
-const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
 
 const MAGIC: Record<string, { bytes: number[]; ext: string }> = {
