@@ -52,6 +52,98 @@ function SortablePCard({ item, onRemove }: { item: RjesenjaItem; onRemove: (id: 
   );
 }
 
+// ── Sortable zone card ────────────────────────────────────────────────────
+interface SortableZoneCardProps {
+  zone: Zone;
+  index: number;
+  items: RjesenjaItem[];
+  allProducts: Product[];
+  prodSearch: string;
+  setProdSearch: (v: string) => void;
+  onTitleChange: (v: string) => void;
+  onDescChange: (v: string) => void;
+  onRemoveZone: () => void;
+  onAddProduct: (prod: Product) => void;
+  onRemoveProduct: (id: string) => void;
+}
+function SortableZoneCard({ zone, index, items, allProducts, prodSearch, setProdSearch, onTitleChange, onDescChange, onRemoveZone, onAddProduct, onRemoveProduct }: SortableZoneCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `zone-${index}` });
+  const zoneItems = items.filter(it => it.zoneLabel === zone.title);
+  const notInZone = allProducts.filter(p =>
+    !items.find(it => it.product.id === p.id && it.zoneLabel === zone.title) &&
+    (!prodSearch || p.title.toLowerCase().includes(prodSearch.toLowerCase()))
+  );
+  return (
+    <div ref={setNodeRef} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden",
+      transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
+      transition, opacity: isDragging ? 0.6 : 1, zIndex: isDragging ? 10 : undefined }}>
+      <div style={{ padding: "12px 16px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", gap: 10, alignItems: "center" }}>
+        <div {...attributes} {...listeners} style={{ cursor: "grab", color: "#CBD5DC", fontSize: 18, flexShrink: 0, userSelect: "none", touchAction: "none" }}>⠿</div>
+        <div style={{ width: 24, height: 24, background: "#C7F1E6", borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#0F766E" }}>✓</div>
+        <div style={{ flex: 1, display: "flex", gap: 10 }}>
+          <TI placeholder="Naziv zone *" value={zone.title} set={onTitleChange} />
+          <TI placeholder="Kratki opis zone" value={zone.desc} set={onDescChange} />
+        </div>
+        <button onClick={onRemoveZone} style={{ padding: "5px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>✕</button>
+      </div>
+      <div style={{ padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Dodani proizvodi ({zoneItems.length})</div>
+          {zoneItems.length === 0 ? (
+            <div style={{ padding: "16px", background: "#F8FAFB", borderRadius: 8, border: "1.5px dashed #E2E8ED", color: "#9CA3AF", fontSize: 13, textAlign: "center" }}>Nema dodanih — dodajte iz panela desno</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {zoneItems.map(it => {
+                const img = (() => { try { return JSON.parse(it.product.images)[0]; } catch { return null; } })();
+                return (
+                  <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: "#F8FAFB", borderRadius: 8, border: "1px solid #E2E8ED" }}>
+                    <div style={{ width: 36, height: 36, background: "#fff", borderRadius: 6, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ opacity: 0.3 }}>📦</span>}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.product.title}</div>
+                      <div style={{ fontSize: 11, color: "#6B7B8A" }}>{it.product.category.name}</div>
+                    </div>
+                    <button onClick={() => onRemoveProduct(it.id)} style={{ padding: "4px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, flexShrink: 0 }}>✕</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div style={{ background: "#F8FAFB", borderRadius: 10, border: "1px solid #E2E8ED", overflow: "hidden" }}>
+          <div style={{ padding: "10px 12px", borderBottom: "1px solid #E2E8ED", background: "#fff" }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#0B1D33", marginBottom: 6 }}>Dodaj u &ldquo;{zone.title}&rdquo;</div>
+            <input value={prodSearch} onChange={e => setProdSearch(e.target.value)} placeholder="Pretraži..."
+              style={{ width: "100%", padding: "6px 10px", border: "1.5px solid #E2E8ED", borderRadius: 6, fontSize: 12, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box" }} />
+          </div>
+          <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            {notInZone.slice(0, 20).map(prod => {
+              const img = (() => { try { return JSON.parse(prod.images)[0]; } catch { return null; } })();
+              return (
+                <button key={prod.id} onClick={() => onAddProduct(prod)}
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", border: "none", borderBottom: "1px solid #F1F5F7", background: "#fff", cursor: "pointer", textAlign: "left", fontFamily: "'Satoshi', sans-serif" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#F0FDF4")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                  <div style={{ width: 28, height: 28, background: "#F8FAFB", borderRadius: 5, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ opacity: 0.3, fontSize: 10 }}>📦</span>}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prod.title}</div>
+                    <div style={{ fontSize: 10, color: "#6B7B8A" }}>{prod.category.name}</div>
+                  </div>
+                  <span style={{ color: "#0F766E", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>+</span>
+                </button>
+              );
+            })}
+            {notInZone.length === 0 && <div style={{ padding: 16, textAlign: "center", color: "#9CA3AF", fontSize: 12 }}>Nema rezultata</div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────
 export default function RjesenjaEditor() {
   const { slug } = useParams<{ slug: string }>();
@@ -298,131 +390,36 @@ export default function RjesenjaEditor() {
               setZones({ ...zones, items: arrayMove(zones.items, oi, ni) });
             }}>
             <SortableContext items={zones.items.map((_, i) => `zone-${i}`)} strategy={rectSortingStrategy}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {zones.items.map((z, i) => {
-              const zoneItems = items.filter(it => it.zoneLabel === z.title);
-              const notInZone = allProducts.filter(p =>
-                !items.find(it => it.product.id === p.id && it.zoneLabel === z.title) &&
-                (!prodSearch || p.title.toLowerCase().includes(prodSearch.toLowerCase()))
-              );
-
-              // eslint-disable-next-line react-hooks/rules-of-hooks
-              const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `zone-${i}` });
-
-              return (
-                <div key={i} ref={setNodeRef}
-                  style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden",
-                    transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
-                    transition, opacity: isDragging ? 0.6 : 1, zIndex: isDragging ? 10 : undefined,
-                  }}>
-                  {/* Zone header */}
-                  <div style={{ padding: "12px 16px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", gap: 10, alignItems: "center" }}>
-                    {/* Drag handle */}
-                    <div {...attributes} {...listeners} style={{ cursor: "grab", color: "#CBD5DC", fontSize: 18, flexShrink: 0, userSelect: "none", touchAction: "none" }}>⠿</div>
-                    <div style={{ width: 24, height: 24, background: "#C7F1E6", borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#0F766E" }}>✓</div>
-                    <div style={{ flex: 1, display: "flex", gap: 10 }}>
-                      <TI placeholder="Naziv zone *" value={z.title} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], title: v }; setZones({ ...zones, items: ni }); }} />
-                      <TI placeholder="Kratki opis zone" value={z.desc} set={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], desc: v }; setZones({ ...zones, items: ni }); }} />
-                    </div>
-                    <button onClick={() => setZones({ ...zones, items: zones.items.filter((_, idx) => idx !== i) })}
-                      style={{ padding: "5px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>✕</button>
-                  </div>
-
-                  <div style={{ padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
-                    {/* Assigned products */}
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        Dodani proizvodi ({zoneItems.length})
-                      </div>
-                      {zoneItems.length === 0 ? (
-                        <div style={{ padding: "16px", background: "#F8FAFB", borderRadius: 8, border: "1.5px dashed #E2E8ED", color: "#9CA3AF", fontSize: 13, textAlign: "center" }}>
-                          Nema dodanih — dodajte iz panela desno
-                        </div>
-                      ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          {zoneItems.map(it => {
-                            const img = (() => { try { return JSON.parse(it.product.images)[0]; } catch { return null; } })();
-                            return (
-                              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: "#F8FAFB", borderRadius: 8, border: "1px solid #E2E8ED" }}>
-                                <div style={{ width: 36, height: 36, background: "#fff", borderRadius: 6, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ opacity: 0.3 }}>📦</span>}
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: 13, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.product.title}</div>
-                                  <div style={{ fontSize: 11, color: "#6B7B8A" }}>{it.product.category.name}</div>
-                                </div>
-                                <button onClick={async () => {
-                                  await fetch(`/api/rjesenja-items`, {
-                                    method: "DELETE", headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ id: it.id }),
-                                  });
-                                  await load();
-                                }} style={{ padding: "4px 8px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, flexShrink: 0 }}>✕</button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Product picker for this zone */}
-                    <div style={{ background: "#F8FAFB", borderRadius: 10, border: "1px solid #E2E8ED", overflow: "hidden" }}>
-                      <div style={{ padding: "10px 12px", borderBottom: "1px solid #E2E8ED", background: "#fff" }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "#0B1D33", marginBottom: 6 }}>Dodaj u "{z.title}"</div>
-                        <input value={prodSearch} onChange={e => setProdSearch(e.target.value)} placeholder="Pretraži..."
-                          style={{ width: "100%", padding: "6px 10px", border: "1.5px solid #E2E8ED", borderRadius: 6, fontSize: 12, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box" }} />
-                      </div>
-                      <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column" }}>
-                        {notInZone.slice(0, 20).map(prod => {
-                          const img = (() => { try { return JSON.parse(prod.images)[0]; } catch { return null; } })();
-                          const alreadyOnPage = !!items.find(it => it.product.id === prod.id);
-                          return (
-                            <button key={prod.id} onClick={async () => {
-                              if (alreadyOnPage) {
-                                // Just update zoneLabel on existing item
-                                const existingItem = items.find(it => it.product.id === prod.id);
-                                if (existingItem) {
-                                  await fetch(`/api/rjesenja-items`, {
-                                    method: "PUT", headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ id: existingItem.id, zoneLabel: z.title }),
-                                  });
-                                }
-                              } else {
-                                // Add new item with zone label
-                                await fetch("/api/rjesenja-items", {
-                                  method: "POST", headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ rjesenjaSlug: slug, productId: prod.id, zoneLabel: z.title }),
-                                });
-                              }
-                              await load();
-                            }} style={{
-                              display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
-                              border: "none", borderBottom: "1px solid #F1F5F7", background: "#fff",
-                              cursor: "pointer", textAlign: "left", fontFamily: "'Satoshi', sans-serif",
-                            }}
-                              onMouseEnter={e => (e.currentTarget.style.background = "#F0FDF4")}
-                              onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
-                            >
-                              <div style={{ width: 28, height: 28, background: "#F8FAFB", borderRadius: 5, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ opacity: 0.3, fontSize: 10 }}>📦</span>}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "#0B1D33", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prod.title}</div>
-                                <div style={{ fontSize: 10, color: "#6B7B8A" }}>{prod.category.name}</div>
-                              </div>
-                              <span style={{ color: "#0F766E", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>+</span>
-                            </button>
-                          );
-                        })}
-                        {notInZone.length === 0 && <div style={{ padding: 16, textAlign: "center", color: "#9CA3AF", fontSize: 12 }}>Nema rezultata</div>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          </SortableContext>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {zones.items.map((z, i) => (
+                  <SortableZoneCard
+                    key={i}
+                    zone={z}
+                    index={i}
+                    items={items}
+                    allProducts={allProducts}
+                    prodSearch={prodSearch}
+                    setProdSearch={setProdSearch}
+                    onTitleChange={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], title: v }; setZones({ ...zones, items: ni }); }}
+                    onDescChange={v => { const ni = [...zones.items]; ni[i] = { ...ni[i], desc: v }; setZones({ ...zones, items: ni }); }}
+                    onRemoveZone={() => setZones({ ...zones, items: zones.items.filter((_, idx) => idx !== i) })}
+                    onAddProduct={async prod => {
+                      const alreadyOnPage = items.find(it => it.product.id === prod.id);
+                      if (alreadyOnPage) {
+                        await fetch("/api/rjesenja-items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: alreadyOnPage.id, zoneLabel: z.title }) });
+                      } else {
+                        await fetch("/api/rjesenja-items", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rjesenjaSlug: slug, productId: prod.id, zoneLabel: z.title }) });
+                      }
+                      await load();
+                    }}
+                    onRemoveProduct={async id => {
+                      await fetch("/api/rjesenja-items", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+                      await load();
+                    }}
+                  />
+                ))}
+              </div>
+            </SortableContext>
           </DndContext>
 
           {/* Add zone + save */}
