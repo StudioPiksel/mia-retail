@@ -52,7 +52,7 @@ const DEFAULT_CLIENTS = [
 ];
 
 export default async function HomePage() {
-  const [blogPosts, homepageHeroSetting, homepageClientsSetting] = await Promise.all([
+  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting] = await Promise.all([
     prisma.blogPost.findMany({
       where: { published: true },
       orderBy: { publishedAt: "desc" },
@@ -61,6 +61,7 @@ export default async function HomePage() {
     }),
     prisma.settings.findUnique({ where: { key: "homepage_hero" } }),
     prisma.settings.findUnique({ where: { key: "homepage_clients" } }),
+    prisma.settings.findUnique({ where: { key: "homepage_values" } }),
   ]);
 
   let heroData = DEFAULT_HERO;
@@ -68,6 +69,20 @@ export default async function HomePage() {
 
   let clients = DEFAULT_CLIENTS;
   try { if (homepageClientsSetting) clients = JSON.parse(homepageClientsSetting.value); } catch {}
+
+  const DEFAULT_VALUES = {
+    eyebrow: "Šta radimo",
+    h2: "Partner u projektu,",
+    h2Highlight: "ne samo dobavljač",
+    desc: "Ne prodajemo samo opremu. Ulazimo u projekat od prve linije na papiru do dana otvaranja — i ostajemo dostupni svakog dana nakon toga.",
+    cards: [
+      { title: "Konsultacija & Planiranje", desc: "Analiziramo prostor, tip objekta i budžet — predlažemo optimalno rješenje prilagođeno vašim specifičnim potrebama i rokovima." },
+      { title: "Isporuka & Montaža", desc: "7 dobavljača, jedna isporuka, jedan voditelj projekta — koordiniramo sve i montiramo na dan, bez gužve na gradilištu." },
+      { title: "Servis & Podrška", desc: "Servisni tim u Podgorici, garantovan odgovor 24h, dijelovi na lageru. Naš odnos ne završava isporukom." },
+    ],
+  };
+  let valuesData = DEFAULT_VALUES;
+  try { if (homepageValuesSetting) valuesData = { ...DEFAULT_VALUES, ...JSON.parse(homepageValuesSetting.value) }; } catch {}
 
   // slides can be full URLs (from Blob) or just filenames (legacy)
   const slides = heroData.slides.map(s => s.startsWith("/") || s.startsWith("http") ? s : `/assets/images/hero/${s}`);
@@ -120,14 +135,22 @@ export default async function HomePage() {
       <section className="values" id="values">
         <div className="container">
           <div className="section-header">
-            <span className="section-eyebrow">Šta radimo</span>
-            <h2>Partner u projektu, <span className="highlight">ne samo dobavljač</span></h2>
-            <p className="section-desc">Ne prodajemo samo opremu. Ulazimo u projekat od prve linije na papiru do dana otvaranja — i ostajemo dostupni svakog dana nakon toga.</p>
+            <span className="section-eyebrow">{valuesData.eyebrow}</span>
+            <h2>{valuesData.h2} <span className="highlight">{valuesData.h2Highlight}</span></h2>
+            <p className="section-desc">{valuesData.desc}</p>
           </div>
           <div className="values-grid">
-            <div className="value-card"><div className="value-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M24 14v20M14 24h20" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round"/><circle cx="24" cy="24" r="10" stroke="#0F766E" strokeWidth="2"/></svg></div><h3>Konsultacija & Planiranje</h3><p>Analiziramo prostor, tip objekta i budžet — predlažemo optimalno rješenje prilagođeno vašim specifičnim potrebama i rokovima.</p></div>
-            <div className="value-card"><div className="value-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M16 32l6-6 4 4 8-8" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="12" y="14" width="24" height="20" rx="3" stroke="#0F766E" strokeWidth="2"/></svg></div><h3>Isporuka & Montaža</h3><p>7 dobavljača, jedna isporuka, jedan voditelj projekta — koordiniramo sve i montiramo na dan, bez gužve na gradilištu.</p></div>
-            <div className="value-card"><div className="value-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M24 18v6l4 2" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round"/><circle cx="24" cy="24" r="10" stroke="#0F766E" strokeWidth="2"/></svg></div><h3>Servis & Podrška</h3><p>Servisni tim u Podgorici, garantovan odgovor 24h, dijelovi na lageru. Naš odnos ne završava isporukom.</p></div>
+            {valuesData.cards.map((card, i) => (
+              <div key={i} className="value-card">
+                <div className="value-icon">
+                  {i === 0 && <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M24 14v20M14 24h20" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round"/><circle cx="24" cy="24" r="10" stroke="#0F766E" strokeWidth="2"/></svg>}
+                  {i === 1 && <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M16 32l6-6 4 4 8-8" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="12" y="14" width="24" height="20" rx="3" stroke="#0F766E" strokeWidth="2"/></svg>}
+                  {i === 2 && <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#E6F7F3"/><path d="M24 18v6l4 2" stroke="#0F766E" strokeWidth="2.5" strokeLinecap="round"/><circle cx="24" cy="24" r="10" stroke="#0F766E" strokeWidth="2"/></svg>}
+                </div>
+                <h3>{card.title}</h3>
+                <p>{card.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

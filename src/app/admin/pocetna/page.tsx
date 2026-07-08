@@ -6,6 +6,8 @@ type Stat = { num: string; label: string };
 type HeroData = { eyebrow: string; h1: string; h1Highlight: string; subtitle: string; stats: Stat[]; slides: string[] };
 type Client = { src: string; alt: string };
 type SeoData = { title: string; description: string; ogImage: string };
+type ValueCard = { title: string; desc: string };
+type ValuesData = { eyebrow: string; h2: string; h2Highlight: string; desc: string; cards: ValueCard[] };
 
 const DEFAULT_HERO: HeroData = {
   eyebrow: "Partner za opremanje na ključ",
@@ -45,6 +47,18 @@ const DEFAULT_CLIENTS: Client[] = [
   { src: "/assets/images/clients/Magyar_Telekom-Logo.wine_-400x267.webp", alt: "Magyar Telekom" },
 ];
 
+const DEFAULT_VALUES: ValuesData = {
+  eyebrow: "Šta radimo",
+  h2: "Partner u projektu,",
+  h2Highlight: "ne samo dobavljač",
+  desc: "Ne prodajemo samo opremu. Ulazimo u projekat od prve linije na papiru do dana otvaranja — i ostajemo dostupni svakog dana nakon toga.",
+  cards: [
+    { title: "Konsultacija & Planiranje", desc: "Analiziramo prostor, tip objekta i budžet — predlažemo optimalno rješenje prilagođeno vašim specifičnim potrebama i rokovima." },
+    { title: "Isporuka & Montaža", desc: "7 dobavljača, jedna isporuka, jedan voditelj projekta — koordiniramo sve i montiramo na dan, bez gužve na gradilištu." },
+    { title: "Servis & Podrška", desc: "Servisni tim u Podgorici, garantovan odgovor 24h, dijelovi na lageru. Naš odnos ne završava isporukom." },
+  ],
+};
+
 const DEFAULT_SEO: SeoData = {
   title: "MIA Retail Solutions — Partner za opremanje maloprodajnih i HoReCa objekata",
   description: "Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora na ključ. 200+ projekata na 3 kontinenta.",
@@ -55,6 +69,7 @@ export default function PocetnaAdmin() {
   const [hero, setHero] = useState<HeroData>(DEFAULT_HERO);
   const [clients, setClients] = useState<Client[]>(DEFAULT_CLIENTS);
   const [seo, setSeo] = useState<SeoData>(DEFAULT_SEO);
+  const [values, setValues] = useState<ValuesData>(DEFAULT_VALUES);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
 
@@ -63,6 +78,7 @@ export default function PocetnaAdmin() {
       try { setHero(JSON.parse(s.homepage_hero)); } catch {}
       try { setClients(JSON.parse(s.homepage_clients)); } catch {}
       try { setSeo({ ...DEFAULT_SEO, ...JSON.parse(s.homepage_seo) }); } catch {}
+      try { setValues({ ...DEFAULT_VALUES, ...JSON.parse(s.homepage_values) }); } catch {}
     });
   }, []);
 
@@ -182,6 +198,26 @@ export default function PocetnaAdmin() {
         <div style={{ marginTop: 16 }}>
           <Btn onClick={() => save("homepage_hero", hero)} saving={saving} label="Sačuvaj slideshow" />
         </div>
+      </Sec>
+
+      {/* ── VALUES ── */}
+      <Sec title="Sekcija 'Šta radimo' — 3 kartice" saved={saved === "homepage_values"}>
+        <Row label="Eyebrow badge"><TI value={values.eyebrow} set={v => setValues({ ...values, eyebrow: v })} /></Row>
+        <Row label="H2 naslov (prvi dio)"><TI value={values.h2} set={v => setValues({ ...values, h2: v })} /></Row>
+        <Row label="H2 istaknuti dio (teal)"><TI value={values.h2Highlight} set={v => setValues({ ...values, h2Highlight: v })} /></Row>
+        <Row label="Opis ispod naslova"><TA value={values.desc} set={v => setValues({ ...values, desc: v })} rows={2} /></Row>
+        <Row label="Kartice">
+          {values.cards.map((card, i) => (
+            <div key={i} style={{ padding: "14px 16px", border: "1px solid #E2E8ED", borderRadius: 10, background: "#F8FAFB", marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#0F766E", marginBottom: 8 }}>Kartica {i + 1}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <TI placeholder="Naslov kartice" value={card.title} set={v => { const c = [...values.cards]; c[i] = { ...c[i], title: v }; setValues({ ...values, cards: c }); }} />
+                <TA value={card.desc} set={v => { const c = [...values.cards]; c[i] = { ...c[i], desc: v }; setValues({ ...values, cards: c }); }} rows={2} />
+              </div>
+            </div>
+          ))}
+        </Row>
+        <Btn onClick={() => save("homepage_values", values)} saving={saving} label="Sačuvaj sekciju" />
       </Sec>
 
       {/* ── KLIJENTI KAROUSEL ── */}
