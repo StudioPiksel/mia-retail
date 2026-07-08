@@ -31,7 +31,7 @@ export default function KontaktAdmin() {
     if (res.status === 401) { window.location.href = "/admin/login"; return; }
     if (!res.ok) { alert("Greška pri snimanju. Pokušajte ponovo."); return; }
     setSaved(key);
-    setTimeout(() => setSaved(""), 2000);
+    setTimeout(() => setSaved(""), 4000);
   }
 
   if (!page) return <div style={{ padding: 40, color: "#6B7B8A" }}>Učitavanje...</div>;

@@ -100,7 +100,7 @@ export default function RjesenjaEditor() {
     if (res.status === 401) { window.location.href = "/admin/login"; return; }
     if (!res.ok) { alert("Greška pri snimanju. Pokušajte ponovo."); return; }
     setSaved(section);
-    setTimeout(() => setSaved(""), 2000);
+    setTimeout(() => setSaved(""), 4000);
   }
 
   // ── Products: group by category ──────────────────────────────────────────
@@ -583,7 +583,7 @@ function Card({ title, children, saved }: { title: string; children: React.React
     <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden" }}>
       <div style={{ padding: "16px 24px", borderBottom: "1px solid #E2E8ED", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#F8FAFB" }}>
         <strong style={{ fontSize: 15, color: "#0B1D33" }}>{title}</strong>
-        {saved && <span style={{ fontSize: 13, color: "#16A34A", fontWeight: 500 }}>✓ Sačuvano</span>}
+        {saved && <span style={{ fontSize: 13, color: "#fff", fontWeight: 600, background: "#16A34A", padding: "4px 12px", borderRadius: 20 }}>✓ Sačuvano!</span>}
       </div>
       <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>
     </div>

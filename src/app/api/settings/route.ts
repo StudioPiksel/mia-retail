@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
 // Ključevi dostupni bez autentifikacije (frontend ih čita)
 const PUBLIC_KEYS_PREFIX = [
@@ -32,5 +33,8 @@ export async function PUT(req: Request) {
       prisma.settings.upsert({ where: { key }, update: { value }, create: { key, value } })
     )
   );
+  // Invalidira Vercel CDN cache za sve stranice koje koriste Settings
+  revalidatePath("/", "layout");
+
   return NextResponse.json({ ok: true });
 }

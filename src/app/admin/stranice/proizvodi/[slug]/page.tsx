@@ -130,7 +130,7 @@ export default function ProizvodiPageEditor() {
     if (res.status === 401) { window.location.href = "/admin/login"; return; }
     if (!res.ok) { alert("Greška pri snimanju. Pokušajte ponovo."); return; }
     setSaved(section);
-    setTimeout(() => setSaved(""), 2000);
+    setTimeout(() => setSaved(""), 4000);
   }
 
   // Groups from current category products

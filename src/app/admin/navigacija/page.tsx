@@ -43,7 +43,7 @@ export default function NavigacijaAdmin() {
     if (res.status === 401) { window.location.href = "/admin/login"; return; }
     if (!res.ok) { alert("Greška pri snimanju. Pokušajte ponovo."); return; }
     setSaved(label);
-    setTimeout(() => setSaved(""), 2000);
+    setTimeout(() => setSaved(""), 4000);
   }
 
   // Nav CRUD
@@ -66,7 +66,7 @@ export default function NavigacijaAdmin() {
     await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rjesenja_pages: JSON.stringify(newPages), megamenu_rjesenja: JSON.stringify(newR) }) });
     setPages(newPages); setRjesenja(newR); setRenaming(null);
-    setSaved("rename"); setTimeout(() => setSaved(""), 2000);
+    setSaved("rename"); setTimeout(() => setSaved(""), 4000);
   }
 
   async function addToMegaMenu(page: RjesenjaPage) {
