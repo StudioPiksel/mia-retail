@@ -72,7 +72,11 @@ export default function ImageUpload({
       const fd = new FormData();
       fd.append("file", new File([webpBlob], file.name.replace(/\.\w+$/, ".webp"), { type: "image/webp" }));
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Upload nije uspio"); }
+      if (!res.ok) {
+        let msg = "Upload nije uspio";
+        try { const e = await res.json(); msg = e.error || msg; } catch {}
+        throw new Error(msg);
+      }
       const { url } = await res.json();
       onChange(url);
       setPreview(null);
