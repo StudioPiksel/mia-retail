@@ -5,10 +5,34 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import HeroForm from "@/components/HeroForm";
 
-export const metadata: Metadata = {
+const DEFAULT_SEO = {
   title: "MIA Retail Solutions — Partner za opremanje maloprodajnih i HoReCa objekata",
   description: "Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora na ključ. 200+ projekata na 3 kontinenta.",
+  ogImage: "/assets/images/logo/mia-og-image.jpg",
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await prisma.settings.findUnique({ where: { key: "homepage_seo" } });
+  let seo = DEFAULT_SEO;
+  try { if (s) seo = { ...DEFAULT_SEO, ...JSON.parse(s.value) }; } catch {}
+  return {
+    title: seo.title,
+    description: seo.description,
+    openGraph: {
+      title: seo.title,
+      description: seo.description,
+      images: seo.ogImage ? [{ url: seo.ogImage, width: 1200, height: 630 }] : [],
+      type: "website",
+      url: "https://miaretailsolutions.com",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.title,
+      description: seo.description,
+      images: seo.ogImage ? [seo.ogImage] : [],
+    },
+  };
+}
 
 const DEFAULT_HERO = {
   eyebrow: "Partner za opremanje na ključ",

@@ -3,15 +3,9 @@ import { useEffect, useState } from "react";
 import ImageUpload from "@/components/admin/ImageUpload";
 
 type Stat = { num: string; label: string };
-type HeroData = {
-  eyebrow: string;
-  h1: string;
-  h1Highlight: string;
-  subtitle: string;
-  stats: Stat[];
-  slides: string[];
-};
+type HeroData = { eyebrow: string; h1: string; h1Highlight: string; subtitle: string; stats: Stat[]; slides: string[] };
 type Client = { src: string; alt: string };
+type SeoData = { title: string; description: string; ogImage: string };
 
 const DEFAULT_HERO: HeroData = {
   eyebrow: "Partner za opremanje na ključ",
@@ -51,9 +45,16 @@ const DEFAULT_CLIENTS: Client[] = [
   { src: "/assets/images/clients/Magyar_Telekom-Logo.wine_-400x267.webp", alt: "Magyar Telekom" },
 ];
 
+const DEFAULT_SEO: SeoData = {
+  title: "MIA Retail Solutions — Partner za opremanje maloprodajnih i HoReCa objekata",
+  description: "Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora na ključ. 200+ projekata na 3 kontinenta.",
+  ogImage: "/assets/images/logo/mia-og-image.jpg",
+};
+
 export default function PocetnaAdmin() {
   const [hero, setHero] = useState<HeroData>(DEFAULT_HERO);
   const [clients, setClients] = useState<Client[]>(DEFAULT_CLIENTS);
+  const [seo, setSeo] = useState<SeoData>(DEFAULT_SEO);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
 
@@ -61,6 +62,7 @@ export default function PocetnaAdmin() {
     fetch("/api/settings").then(r => r.json()).then(s => {
       try { setHero(JSON.parse(s.homepage_hero)); } catch {}
       try { setClients(JSON.parse(s.homepage_clients)); } catch {}
+      try { setSeo({ ...DEFAULT_SEO, ...JSON.parse(s.homepage_seo) }); } catch {}
     });
   }, []);
 
@@ -83,6 +85,40 @@ export default function PocetnaAdmin() {
         <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>Početna stranica — Uređivač</h1>
         <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Hero tekst, statistike, slideshow slike i karousel klijenata.</p>
       </div>
+
+      {/* ── SEO ── */}
+      <Sec title="SEO & Social dijeljenje (OG)" saved={saved === "homepage_seo"}>
+        <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 4px" }}>
+          Ovo se prikazuje kad neko podijeli link na WhatsApp, LinkedIn, Facebook i u Google rezultatima.
+        </p>
+        <Row label="Naslov stranice (title tag)">
+          <TI value={seo.title} set={v => setSeo({ ...seo, title: v })} />
+          <span style={{ fontSize: 11, color: seo.title.length > 60 ? "#DC2626" : "#6B7B8A", marginTop: 4, display: "block" }}>
+            {seo.title.length}/60 znakova {seo.title.length > 60 ? "— predugo za Google!" : ""}
+          </span>
+        </Row>
+        <Row label="Meta opis (description)">
+          <TA value={seo.description} set={v => setSeo({ ...seo, description: v })} rows={2} />
+          <span style={{ fontSize: 11, color: seo.description.length > 160 ? "#DC2626" : "#6B7B8A", marginTop: 4, display: "block" }}>
+            {seo.description.length}/160 znakova {seo.description.length > 160 ? "— predugo za Google!" : ""}
+          </span>
+        </Row>
+        <Row label="OG slika (prikazuje se pri dijeljenju linka)">
+          <ImageUpload value={seo.ogImage} onChange={v => setSeo({ ...seo, ogImage: v })} maxWidthPx={1200} qualityWebp={0.9} />
+          <span style={{ fontSize: 11, color: "#6B7B8A", marginTop: 4, display: "block" }}>Preporučena veličina: 1200×630px</span>
+        </Row>
+        {seo.ogImage && (
+          <div style={{ border: "1px solid #E2E8ED", borderRadius: 10, overflow: "hidden", maxWidth: 400 }}>
+            <img src={seo.ogImage} alt="OG preview" style={{ width: "100%", display: "block" }} />
+            <div style={{ padding: "10px 12px", background: "#F8FAFB", borderTop: "1px solid #E2E8ED" }}>
+              <div style={{ fontSize: 12, color: "#6B7B8A", marginBottom: 2 }}>miaretailsolutions.com</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#0B1D33", marginBottom: 2 }}>{seo.title.slice(0, 55)}{seo.title.length > 55 ? "..." : ""}</div>
+              <div style={{ fontSize: 12, color: "#374151" }}>{seo.description.slice(0, 100)}{seo.description.length > 100 ? "..." : ""}</div>
+            </div>
+          </div>
+        )}
+        <Btn onClick={() => save("homepage_seo", seo)} saving={saving} label="Sačuvaj SEO" />
+      </Sec>
 
       {/* ── HERO TEKST ── */}
       <Sec title="Hero — Tekst i statistike" saved={saved === "homepage_hero"}>
