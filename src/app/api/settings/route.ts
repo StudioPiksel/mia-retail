@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 const PUBLIC_KEYS_PREFIX = [
   "megamenu_", "rjesenja_", "proizvodi_", "onama_", "pomoc_", "kontakt_",
   "whatsapp_", "rjesenja_pages", "megamenu_rjesenja", "megamenu_proizvodi",
+  "homepage_",
 ];
 
 function isPublicKey(key: string) {

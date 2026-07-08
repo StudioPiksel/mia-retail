@@ -17,6 +17,7 @@ const nav: NavItem[] = [
   { href: "/admin/products", label: "Baza proizvoda", icon: "📦" },
 
   { separator: "STRANICE" },
+  { href: "/admin/pocetna", label: "Početna", icon: "🏠" },
   { href: "/admin/rjesenja", label: "Rješenja", icon: "🏪" },
   { href: "/admin/stranice/proizvodi", label: "Proizvodi stranice", icon: "🗂" },
   { href: "/admin/realizacije", label: "Realizacije", icon: "🏆" },

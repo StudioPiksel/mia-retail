@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import SiteLayout from "@/components/layout/SiteLayout";
 import { prisma } from "@/lib/prisma";
@@ -9,18 +10,43 @@ export const metadata: Metadata = {
   description: "Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora na ključ. 200+ projekata na 3 kontinenta.",
 };
 
-export default async function HomePage() {
-  const blogPosts = await prisma.blogPost.findMany({
-    where: { published: true },
-    orderBy: { publishedAt: "desc" },
-    take: 3,
-    select: { slug: true, title: true, excerpt: true, category: true, thumbnail: true, publishedAt: true },
-  });
+const DEFAULT_HERO = {
+  eyebrow: "Partner za opremanje na ključ",
+  h1: "Vaš objekat, spreman",
+  h1Highlight: "na dan otvaranja",
+  subtitle: "Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora. Radimo s lancima koji ne trpe kašnjenje — Lidl, IKEA, Carrefour, SPAR.",
+  stats: [
+    { num: "200+", label: "Realizovanih projekata" },
+    { num: "3", label: "Kontinenta" },
+    { num: "15+", label: "Godina iskustva" },
+  ],
+  slides: ["puglia-inox-1.jpg","puglia-inox-2.jpg","puglia-inox-3.jpg","esthederm.jpg","MINIEKOCOLORE.Leclerc2.jpg","ICASupermarketPelikan.jpg","PoppyBudapest2.jpg","1764661906919.jpg","ConadItaly1.jpg"],
+};
 
-  const heroSlides = ["puglia-inox-1.jpg","puglia-inox-2.jpg","puglia-inox-3.jpg","esthederm.jpg","MINIEKOCOLORE.Leclerc2.jpg","ICASupermarketPelikan.jpg","PoppyBudapest2.jpg","1764661906919.jpg","ConadItaly1.jpg"];
-  const clients = [
-    {src:"/assets/images/clients/Logo-Lidl.webp",alt:"Lidl"},{src:"/assets/images/clients/IKEA-Logo-400x225.webp",alt:"IKEA"},{src:"/assets/images/clients/carrefour-logo-385x300.webp",alt:"Carrefour"},{src:"/assets/images/clients/Logo-Spar.webp",alt:"SPAR"},{src:"/assets/images/clients/Logo-Konzum-400x84.webp",alt:"Konzum"},{src:"/assets/images/clients/aldi-logo.webp",alt:"Aldi"},{src:"/assets/images/clients/Logo-Coop-400x159.webp",alt:"Coop"},{src:"/assets/images/clients/Logo-Knauf-400x83.webp",alt:"Kaufland"},{src:"/assets/images/clients/nestle-4-logo-png-transparent-300x300.webp",alt:"Nestlé"},{src:"/assets/images/clients/Logo-Loreal.webp",alt:"L'Oréal"},{src:"/assets/images/clients/InterContinentalLogo.svg-400x155.webp",alt:"InterContinental"},{src:"/assets/images/clients/Magyar_Telekom-Logo.wine_-400x267.webp",alt:"Magyar Telekom"},
-  ];
+const DEFAULT_CLIENTS = [
+  {src:"/assets/images/clients/Logo-Lidl.webp",alt:"Lidl"},{src:"/assets/images/clients/IKEA-Logo-400x225.webp",alt:"IKEA"},{src:"/assets/images/clients/carrefour-logo-385x300.webp",alt:"Carrefour"},{src:"/assets/images/clients/Logo-Spar.webp",alt:"SPAR"},{src:"/assets/images/clients/Logo-Konzum-400x84.webp",alt:"Konzum"},{src:"/assets/images/clients/aldi-logo.webp",alt:"Aldi"},{src:"/assets/images/clients/Logo-Coop-400x159.webp",alt:"Coop"},{src:"/assets/images/clients/Logo-Knauf-400x83.webp",alt:"Kaufland"},{src:"/assets/images/clients/nestle-4-logo-png-transparent-300x300.webp",alt:"Nestlé"},{src:"/assets/images/clients/Logo-Loreal.webp",alt:"L'Oréal"},{src:"/assets/images/clients/InterContinentalLogo.svg-400x155.webp",alt:"InterContinental"},{src:"/assets/images/clients/Magyar_Telekom-Logo.wine_-400x267.webp",alt:"Magyar Telekom"},
+];
+
+export default async function HomePage() {
+  const [blogPosts, homepageHeroSetting, homepageClientsSetting] = await Promise.all([
+    prisma.blogPost.findMany({
+      where: { published: true },
+      orderBy: { publishedAt: "desc" },
+      take: 3,
+      select: { slug: true, title: true, excerpt: true, category: true, thumbnail: true, publishedAt: true },
+    }),
+    prisma.settings.findUnique({ where: { key: "homepage_hero" } }),
+    prisma.settings.findUnique({ where: { key: "homepage_clients" } }),
+  ]);
+
+  let heroData = DEFAULT_HERO;
+  try { if (homepageHeroSetting) heroData = { ...DEFAULT_HERO, ...JSON.parse(homepageHeroSetting.value) }; } catch {}
+
+  let clients = DEFAULT_CLIENTS;
+  try { if (homepageClientsSetting) clients = JSON.parse(homepageClientsSetting.value); } catch {}
+
+  // slides can be full URLs (from Blob) or just filenames (legacy)
+  const slides = heroData.slides.map(s => s.startsWith("/") || s.startsWith("http") ? s : `/assets/images/hero/${s}`);
   const designItems = [
     {src:"/assets/images/design/dzyuba/Foxi_supermarket.webp",caption:"Foxi supermarket"},{src:"/assets/images/design/witt/Aroma_marketi.jpg",caption:"Aroma marketi"},{src:"/assets/images/design/dzyuba/Agrohub_Tbilisi.webp",caption:"Agrohub · Tbilisi"},{src:"/assets/images/design/witt/Mesara_Plana.jpg",caption:"Mesara Plana"},{src:"/assets/images/design/dzyuba/Galmart_Uzbekistan.webp",caption:"Galmart · Uzbekistan"},{src:"/assets/images/design/witt/Restoran_Flamingo.jpg",caption:"Restoran Flamingo"},{src:"/assets/images/design/dzyuba/Vinoteca.webp",caption:"Vinoteca"},{src:"/assets/images/design/witt/Kafe_Soljica_projektovanje.jpg",caption:"Kafe Šoljica"},{src:"/assets/images/design/dzyuba/Magnum_Ukraine.webp",caption:"Magnum · Ukrajina"},{src:"/assets/images/design/witt/Restoran_Vojvode_Stepe.jpg",caption:"Restoran Vojvode Stepe"},{src:"/assets/images/design/dzyuba/Smako_market.webp",caption:"Smako market"},{src:"/assets/images/design/witt/Aroma_marketi_2.jpg",caption:"Aroma marketi"},{src:"/assets/images/design/dzyuba/Selecto.webp",caption:"Selecto"},{src:"/assets/images/design/dzyuba/Ultramarket.webp",caption:"Ultramarket"},
   ];
@@ -33,20 +59,20 @@ export default async function HomePage() {
       {/* HERO */}
       <section className="hero" id="hero">
         <div className="hero-slideshow">
-          {heroSlides.map((slide, i) => (
-            <div key={slide} className={`hero-slide${i === 0 ? " active" : ""}`} style={{ backgroundImage: `url('/assets/images/hero/${slide}')` }} />
+          {slides.map((slide, i) => (
+            <div key={slide} className={`hero-slide${i === 0 ? " active" : ""}`} style={{ backgroundImage: `url('${slide}')` }} />
           ))}
         </div>
         <div className="hero-overlay"></div>
         <div className="hero-container">
           <div className="hero-content">
-            <p className="hero-eyebrow">Partner za opremanje na ključ</p>
-            <h1 className="hero-title">Vaš objekat, spreman <span className="highlight">na dan otvaranja</span></h1>
-            <p className="hero-subtitle">Projektujemo, isporučujemo i montiramo kompletnu opremu maloprodajnih i HoReCa prostora. Radimo s lancima koji ne trpe kašnjenje — Lidl, IKEA, Carrefour, SPAR.</p>
+            <p className="hero-eyebrow">{heroData.eyebrow}</p>
+            <h1 className="hero-title">{heroData.h1} <span className="highlight">{heroData.h1Highlight}</span></h1>
+            <p className="hero-subtitle">{heroData.subtitle}</p>
             <div className="hero-stats">
-              <div className="stat"><span className="stat-number">200+</span><span className="stat-label">Realizovanih projekata</span></div>
-              <div className="stat"><span className="stat-number">3</span><span className="stat-label">Kontinenta</span></div>
-              <div className="stat"><span className="stat-number">15+</span><span className="stat-label">Godina iskustva</span></div>
+              {heroData.stats.map((s, i) => (
+                <div key={i} className="stat"><span className="stat-number">{s.num}</span><span className="stat-label">{s.label}</span></div>
+              ))}
             </div>
           </div>
           <div className="hero-form-wrapper">
@@ -62,6 +88,7 @@ export default async function HomePage() {
           <div className="logo-carousel"><div className="logo-track">
             {[...clients, ...clients].map((c, i) => <img key={i} src={c.src} alt={c.alt} loading="lazy" decoding="async" />)}
           </div></div>
+
         </div>
       </section>
 
