@@ -31,24 +31,27 @@ export default function RjesenjaListAdmin() {
   useEffect(() => { load(); }, []);
 
   async function addPage() {
-    if (!newSlug.trim() || !newLabel.trim()) return;
-    const slug = newSlug.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    if (!newLabel.trim()) return;
+    const derivedSlug = newLabel.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
+    const slug = (newSlug.trim() || derivedSlug).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    if (!slug) return alert("Unesite naziv stranice.");
     if (pages.find(p => p.slug === slug)) return alert("Slug već postoji.");
     setSaving(true);
 
     const newPages = [...pages, { slug, label: newLabel.trim(), bg: newBg }];
-    // Save pages list
-    await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" },
+    const r1 = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rjesenja_pages: JSON.stringify(newPages) }) });
+    if (r1.status === 401) { window.location.href = "/admin/login"; return; }
+    if (!r1.ok) { setSaving(false); alert("Greška pri snimanju. Pokušajte ponovo."); return; }
 
-    // Seed default content for new page
-    await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" },
+    const r2 = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         [`rjesenja_${slug}_hero`]: JSON.stringify(DEFAULT_HERO(slug, newLabel.trim(), newBg)),
         [`rjesenja_${slug}_zones`]: JSON.stringify({ badge: "Obim opremanja", h2: `Šta opremamo u ${newLabel}`, desc: "Pokrivamo svaku zonu objekta.", items: [] }),
         [`rjesenja_${slug}_realizacije`]: JSON.stringify({ items: [] }),
         [`rjesenja_${slug}_cta`]: JSON.stringify({ h2: `Opremate ${newLabel} objekat?`, p: "Naš tim projektuje, isporučuje i montira opremu na ključ. Javite se za besplatnu konsultaciju." }),
       }) });
+    if (!r2.ok) { setSaving(false); alert("Greška pri kreiranju sadržaja stranice."); return; }
 
     setPages(newPages);
     setNewSlug(""); setNewLabel(""); setShowAdd(false); setSaving(false);
