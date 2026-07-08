@@ -65,7 +65,10 @@ const DEFAULT_SEO: SeoData = {
   ogImage: "/assets/images/logo/mia-og-image.jpg",
 };
 
+type Tab = "seo" | "hero" | "values" | "clients";
+
 export default function PocetnaAdmin() {
+  const [tab, setTab] = useState<Tab>("hero");
   const [hero, setHero] = useState<HeroData>(DEFAULT_HERO);
   const [clients, setClients] = useState<Client[]>(DEFAULT_CLIENTS);
   const [seo, setSeo] = useState<SeoData>(DEFAULT_SEO);
@@ -95,14 +98,37 @@ export default function PocetnaAdmin() {
     setTimeout(() => setSaved(""), 4000);
   }
 
+  const tabs: { key: Tab; label: string; icon: string }[] = [
+    { key: "hero", label: "Hero", icon: "🏠" },
+    { key: "values", label: "Šta radimo", icon: "📋" },
+    { key: "clients", label: "Klijenti", icon: "🏢" },
+    { key: "seo", label: "SEO", icon: "🔍" },
+  ];
+
   return (
     <div style={{ maxWidth: 860 }}>
-      <div style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>Početna stranica — Uređivač</h1>
-        <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Hero tekst, statistike, slideshow slike i karousel klijenata.</p>
+        <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Svaka sekcija se snima zasebno. Izmjene su odmah vidljive na sajtu.</p>
+      </div>
+
+      {/* ── TABOVI ── */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#fff", borderRadius: 10, padding: 4, border: "1px solid #E2E8ED", width: "fit-content" }}>
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)} style={{
+            padding: "8px 18px", borderRadius: 7, border: "none", cursor: "pointer",
+            fontFamily: "'Satoshi', sans-serif", fontSize: 13, fontWeight: tab === t.key ? 600 : 400,
+            background: tab === t.key ? "#0F766E" : "transparent",
+            color: tab === t.key ? "#fff" : "#6B7B8A",
+            transition: "all 0.15s",
+          }}>
+            {t.icon} {t.label}
+          </button>
+        ))}
       </div>
 
       {/* ── SEO ── */}
+      {tab === "seo" && <>
       <Sec title="SEO & Social dijeljenje (OG)" saved={saved === "homepage_seo"}>
         <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 4px" }}>
           Ovo se prikazuje kad neko podijeli link na WhatsApp, LinkedIn, Facebook i u Google rezultatima.
@@ -134,9 +160,10 @@ export default function PocetnaAdmin() {
           </div>
         )}
         <Btn onClick={() => save("homepage_seo", seo)} saving={saving} label="Sačuvaj SEO" />
-      </Sec>
+      </Sec></>}
 
       {/* ── HERO TEKST ── */}
+      {tab === "hero" && <>
       <Sec title="Hero — Tekst i statistike" saved={saved === "homepage_hero"}>
         <Row label="Eyebrow badge">
           <TI value={hero.eyebrow} set={v => setHero({ ...hero, eyebrow: v })} />
@@ -198,9 +225,10 @@ export default function PocetnaAdmin() {
         <div style={{ marginTop: 16 }}>
           <Btn onClick={() => save("homepage_hero", hero)} saving={saving} label="Sačuvaj slideshow" />
         </div>
-      </Sec>
+      </Sec></>}
 
       {/* ── VALUES ── */}
+      {tab === "values" && <>
       <Sec title="Sekcija 'Šta radimo' — 3 kartice" saved={saved === "homepage_values"}>
         <Row label="Eyebrow badge"><TI value={values.eyebrow} set={v => setValues({ ...values, eyebrow: v })} /></Row>
         <Row label="H2 naslov (prvi dio)"><TI value={values.h2} set={v => setValues({ ...values, h2: v })} /></Row>
@@ -218,9 +246,10 @@ export default function PocetnaAdmin() {
           ))}
         </Row>
         <Btn onClick={() => save("homepage_values", values)} saving={saving} label="Sačuvaj sekciju" />
-      </Sec>
+      </Sec></>}
 
       {/* ── KLIJENTI KAROUSEL ── */}
+      {tab === "clients" && <>
       <Sec title="Karousel klijenata — Logotipi" saved={saved === "homepage_clients"}>
         <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 14px" }}>
           Logotipi kompanija u traci ispod hero sekcije. Preporučena veličina: max 400×200px, transparentna pozadina (WebP/PNG).
@@ -257,7 +286,7 @@ export default function PocetnaAdmin() {
         <div style={{ marginTop: 16 }}>
           <Btn onClick={() => save("homepage_clients", clients)} saving={saving} label="Sačuvaj karousel" />
         </div>
-      </Sec>
+      </Sec></>}
     </div>
   );
 }
