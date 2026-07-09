@@ -52,7 +52,7 @@ const DEFAULT_CLIENTS = [
 ];
 
 export default async function HomePage() {
-  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting, homepageIndustriesSetting] = await Promise.all([
+  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting, homepageIndustriesSetting, homepageRealizacijeSetting] = await Promise.all([
     prisma.blogPost.findMany({
       where: { published: true },
       orderBy: { publishedAt: "desc" },
@@ -63,6 +63,7 @@ export default async function HomePage() {
     prisma.settings.findUnique({ where: { key: "homepage_clients" } }),
     prisma.settings.findUnique({ where: { key: "homepage_values" } }),
     prisma.settings.findUnique({ where: { key: "homepage_industries" } }),
+    prisma.settings.findUnique({ where: { key: "homepage_realizacije" } }),
   ]);
 
   let heroData = DEFAULT_HERO;
@@ -99,6 +100,26 @@ export default async function HomePage() {
   };
   let industriesData = DEFAULT_INDUSTRIES;
   try { if (homepageIndustriesSetting) industriesData = { ...DEFAULT_INDUSTRIES, ...JSON.parse(homepageIndustriesSetting.value) }; } catch {}
+
+  const DEFAULT_REALIZACIJE = {
+    eyebrow: "Realizacije",
+    h2: "Projekti koji govore",
+    h2Highlight: "umjesto nas",
+    p: "Od Njemačke do Australije — opremamo objekte vodećih lanaca. Svaki projekat je priča o preciznosti, rokovima i kvalitetu bez kompromisa.",
+    stats: [{ num: "12+", label: "Zemalja" }, { num: "200+", label: "Projekata" }, { num: "98%", label: "Na vrijeme" }],
+    btnLabel: "Pogledajte sve realizacije",
+    btnHref: "/reference",
+    slides: [
+      { img: "/assets/images/realizacije/EDEKAGermany2.jpg", alt: "EDEKA — Njemačka" },
+      { img: "/assets/images/realizacije/ConadItaly1.jpg", alt: "Conad — Italija" },
+      { img: "/assets/images/realizacije/Sephora.jpg", alt: "Sephora" },
+      { img: "/assets/images/realizacije/CarrefourFrance.jpg", alt: "Carrefour — Francuska" },
+      { img: "/assets/images/realizacije/PoppyBudapest2.jpg", alt: "Poppy — Budimpešta" },
+      { img: "/assets/images/realizacije/GlobusPilsen.jpg", alt: "Globus — Pilsen" },
+    ],
+  };
+  let realizacijeData = DEFAULT_REALIZACIJE;
+  try { if (homepageRealizacijeSetting) realizacijeData = { ...DEFAULT_REALIZACIJE, ...JSON.parse(homepageRealizacijeSetting.value) }; } catch {}
 
   // slides can be full URLs (from Blob) or just filenames (legacy)
   const slides = heroData.slides.map(s => s.startsWith("/") || s.startsWith("http") ? s : `/assets/images/hero/${s}`);
@@ -201,27 +222,27 @@ export default async function HomePage() {
       {/* REALIZACIJE */}
       <section className="realizacije" id="realizacije">
         <div className="realizacije-bg">
-          {[{img:"EDEKAGermany2.jpg",alt:"EDEKA, Njemačka"},{img:"ConadItaly1.jpg",alt:"Conad, Italija"},{img:"Sephora.jpg",alt:"Sephora"},{img:"CarrefourFrance.jpg",alt:"Carrefour, Francuska"},{img:"PoppyBudapest2.jpg",alt:"Poppy, Budimpešta"},{img:"GlobusPilsen.jpg",alt:"Globus, Pilsen"}].map((s,i)=>(
-            <div key={s.img} className={`slider-slide${i===0?" active":""}`} data-index={i}><img src={`/assets/images/realizacije/${s.img}`} alt={s.alt} decoding="async" loading="lazy" /></div>
+          {realizacijeData.slides.map((s, i) => (
+            <div key={i} className={`slider-slide${i===0?" active":""}`} data-index={i}><img src={s.img} alt={s.alt} decoding="async" loading="lazy" /></div>
           ))}
         </div>
         <div className="realizacije-overlay"></div>
         <div className="realizacije-content">
           <div className="realizacije-text">
-            <span className="section-eyebrow">Realizacije</span>
-            <h2>Projekti koji govore <span className="highlight">umjesto nas</span></h2>
-            <p>Od Njemačke do Australije — opremamo objekte vodećih lanaca. Svaki projekat je priča o preciznosti, rokovima i kvalitetu bez kompromisa.</p>
+            <span className="section-eyebrow">{realizacijeData.eyebrow}</span>
+            <h2>{realizacijeData.h2} <span className="highlight">{realizacijeData.h2Highlight}</span></h2>
+            <p>{realizacijeData.p}</p>
             <div className="realizacije-stats">
-              <div className="real-stat"><strong>12+</strong><span>Zemalja</span></div>
-              <div className="real-stat"><strong>200+</strong><span>Projekata</span></div>
-              <div className="real-stat"><strong>98%</strong><span>Na vrijeme</span></div>
+              {realizacijeData.stats.map((s, i) => (
+                <div key={i} className="real-stat"><strong>{s.num}</strong><span>{s.label}</span></div>
+              ))}
             </div>
-            <Link href="/reference" className="btn-primary btn-shine">Pogledajte sve realizacije <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></Link>
+            <Link href={realizacijeData.btnHref} className="btn-primary btn-shine">{realizacijeData.btnLabel} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></Link>
           </div>
           <div className="realizacije-slider-info">
-            <span className="slider-title">EDEKA — Njemačka</span>
+            <span className="slider-title">{realizacijeData.slides[0]?.alt ?? ""}</span>
             <div className="slider-dots">
-              {[0,1,2,3,4,5].map(i=><button key={i} className={`slider-dot${i===0?" active":""}`} data-slide={i}></button>)}
+              {realizacijeData.slides.map((_, i) => <button key={i} className={`slider-dot${i===0?" active":""}`} data-slide={i}></button>)}
             </div>
           </div>
         </div>

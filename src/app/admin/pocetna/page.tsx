@@ -65,6 +65,36 @@ const DEFAULT_SEO: SeoData = {
   ogImage: "/assets/images/logo/mia-og-image.jpg",
 };
 
+type RealizacijeSlide = { img: string; alt: string };
+type RealizacijeStat = { num: string; label: string };
+type RealizacijeData = {
+  eyebrow: string; h2: string; h2Highlight: string; p: string;
+  stats: RealizacijeStat[]; btnLabel: string; btnHref: string;
+  slides: RealizacijeSlide[];
+};
+
+const DEFAULT_REALIZACIJE: RealizacijeData = {
+  eyebrow: "Realizacije",
+  h2: "Projekti koji govore",
+  h2Highlight: "umjesto nas",
+  p: "Od Njemačke do Australije — opremamo objekte vodećih lanaca. Svaki projekat je priča o preciznosti, rokovima i kvalitetu bez kompromisa.",
+  stats: [
+    { num: "12+", label: "Zemalja" },
+    { num: "200+", label: "Projekata" },
+    { num: "98%", label: "Na vrijeme" },
+  ],
+  btnLabel: "Pogledajte sve realizacije",
+  btnHref: "/reference",
+  slides: [
+    { img: "/assets/images/realizacije/EDEKAGermany2.jpg", alt: "EDEKA — Njemačka" },
+    { img: "/assets/images/realizacije/ConadItaly1.jpg", alt: "Conad — Italija" },
+    { img: "/assets/images/realizacije/Sephora.jpg", alt: "Sephora" },
+    { img: "/assets/images/realizacije/CarrefourFrance.jpg", alt: "Carrefour — Francuska" },
+    { img: "/assets/images/realizacije/PoppyBudapest2.jpg", alt: "Poppy — Budimpešta" },
+    { img: "/assets/images/realizacije/GlobusPilsen.jpg", alt: "Globus — Pilsen" },
+  ],
+};
+
 type IndustryCard = { href: string; img: string; title: string; desc: string };
 type IndustriesData = { eyebrow: string; h2: string; h2Highlight: string; cards: IndustryCard[] };
 
@@ -90,6 +120,7 @@ export default function PocetnaAdmin() {
   const [seo, setSeo] = useState<SeoData>(DEFAULT_SEO);
   const [values, setValues] = useState<ValuesData>(DEFAULT_VALUES);
   const [industries, setIndustries] = useState<IndustriesData>(DEFAULT_INDUSTRIES);
+  const [realizacije, setRealizacije] = useState<RealizacijeData>(DEFAULT_REALIZACIJE);
   const [pageOptions, setPageOptions] = useState<{ label: string; href: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
@@ -101,6 +132,7 @@ export default function PocetnaAdmin() {
       try { setSeo({ ...DEFAULT_SEO, ...JSON.parse(s.homepage_seo) }); } catch {}
       try { setValues({ ...DEFAULT_VALUES, ...JSON.parse(s.homepage_values) }); } catch {}
       try { setIndustries({ ...DEFAULT_INDUSTRIES, ...JSON.parse(s.homepage_industries) }); } catch {}
+      try { setRealizacije({ ...DEFAULT_REALIZACIJE, ...JSON.parse(s.homepage_realizacije) }); } catch {}
 
       // Build page picker options from known settings keys
       const opts: { label: string; href: string }[] = [
@@ -153,6 +185,7 @@ export default function PocetnaAdmin() {
     { key: "values", label: "Šta radimo", icon: "📋" },
     { key: "clients", label: "Klijenti", icon: "🏢" },
     { key: "industries", label: "Industrije", icon: "🏪" },
+    { key: "realizacije", label: "Realizacije", icon: "🏆" },
     { key: "seo", label: "SEO", icon: "🔍" },
   ];
 
@@ -297,6 +330,70 @@ export default function PocetnaAdmin() {
           ))}
         </Row>
         <Btn onClick={() => save("homepage_values", values)} saving={saving} label="Sačuvaj sekciju" />
+      </Sec></>}
+
+      {/* ── REALIZACIJE ── */}
+      {tab === "realizacije" && <>
+      <Sec title="Tekst sekcije" saved={saved === "homepage_realizacije"}>
+        <Row label="Eyebrow badge"><TI value={realizacije.eyebrow} set={v => setRealizacije({ ...realizacije, eyebrow: v })} /></Row>
+        <Row label="H2 naslov (prvi dio)"><TI value={realizacije.h2} set={v => setRealizacije({ ...realizacije, h2: v })} /></Row>
+        <Row label="H2 istaknuti dio (teal)"><TI value={realizacije.h2Highlight} set={v => setRealizacije({ ...realizacije, h2Highlight: v })} /></Row>
+        <Row label="Opis ispod naslova"><TA value={realizacije.p} set={v => setRealizacije({ ...realizacije, p: v })} rows={2} /></Row>
+        <Row label="Statistike">
+          {realizacije.stats.map((s, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+              <TI placeholder="Broj (12+)" value={s.num} set={v => { const st = [...realizacije.stats]; st[i] = { ...st[i], num: v }; setRealizacije({ ...realizacije, stats: st }); }} />
+              <TI placeholder="Labela (Zemalja)" value={s.label} set={v => { const st = [...realizacije.stats]; st[i] = { ...st[i], label: v }; setRealizacije({ ...realizacije, stats: st }); }} />
+              <button onClick={() => setRealizacije({ ...realizacije, stats: realizacije.stats.filter((_, idx) => idx !== i) })}
+                style={{ padding: "8px 10px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>✕</button>
+            </div>
+          ))}
+          <button onClick={() => setRealizacije({ ...realizacije, stats: [...realizacije.stats, { num: "", label: "" }] })}
+            style={{ padding: "6px 14px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
+            + Dodaj statistiku
+          </button>
+        </Row>
+        <Row label="Dugme — tekst"><TI value={realizacije.btnLabel} set={v => setRealizacije({ ...realizacije, btnLabel: v })} /></Row>
+        <Row label="Dugme — link"><TI value={realizacije.btnHref} set={v => setRealizacije({ ...realizacije, btnHref: v })} /></Row>
+        <Btn onClick={() => save("homepage_realizacije", realizacije)} saving={saving} label="Sačuvaj tekst" />
+      </Sec>
+
+      <Sec title="Slideshow — pozadinske slike" saved={saved === "homepage_realizacije"}>
+        <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 14px" }}>
+          Slike se rotiraju kao pozadina sekcije. Labela se prikazuje uz tačkice (npr. "EDEKA — Njemačka"). Preporučena veličina: 1920×1080px.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {realizacije.slides.map((slide, i) => (
+            <div key={i} style={{ padding: "12px 14px", border: "1px solid #E2E8ED", borderRadius: 10, background: "#F8FAFB" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#0F766E" }}>Slajd {i + 1}</span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={() => { if (i === 0) return; const sl = [...realizacije.slides]; [sl[i-1],sl[i]]=[sl[i],sl[i-1]]; setRealizacije({...realizacije,slides:sl}); }} disabled={i===0} style={{ padding:"4px 8px", background:"#E6EEF2", border:"none", borderRadius:5, cursor:i===0?"not-allowed":"pointer", opacity:i===0?0.4:1, fontSize:13 }}>↑</button>
+                  <button onClick={() => { if (i===realizacije.slides.length-1) return; const sl=[...realizacije.slides]; [sl[i],sl[i+1]]=[sl[i+1],sl[i]]; setRealizacije({...realizacije,slides:sl}); }} disabled={i===realizacije.slides.length-1} style={{ padding:"4px 8px", background:"#E6EEF2", border:"none", borderRadius:5, cursor:i===realizacije.slides.length-1?"not-allowed":"pointer", opacity:i===realizacije.slides.length-1?0.4:1, fontSize:13 }}>↓</button>
+                  <button onClick={() => setRealizacije({ ...realizacije, slides: realizacije.slides.filter((_, idx) => idx !== i) })}
+                    style={{ padding: "4px 10px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 5, cursor: "pointer", fontSize: 13 }}>✕</button>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                {slide.img && <img src={slide.img} alt="" style={{ width: 100, height: 64, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div>
+                    <label style={lbl}>Labela (prikazuje se uz tačkice)</label>
+                    <input value={slide.alt} onChange={e => { const sl=[...realizacije.slides]; sl[i]={...sl[i],alt:e.target.value}; setRealizacije({...realizacije,slides:sl}); }} style={inp} placeholder="EDEKA — Njemačka" />
+                  </div>
+                  <ImageUpload value={slide.img} onChange={url => { const sl=[...realizacije.slides]; sl[i]={...sl[i],img:url}; setRealizacije({...realizacije,slides:sl}); }} maxWidthPx={1920} qualityWebp={0.85} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => setRealizacije({ ...realizacije, slides: [...realizacije.slides, { img: "", alt: "" }] })}
+          style={{ marginTop: 14, padding: "8px 16px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
+          + Dodaj slajd
+        </button>
+        <div style={{ marginTop: 16 }}>
+          <Btn onClick={() => save("homepage_realizacije", realizacije)} saving={saving} label="Sačuvaj slideshow" />
+        </div>
       </Sec></>}
 
       {/* ── INDUSTRIJE GRID ── */}
