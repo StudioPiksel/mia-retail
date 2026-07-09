@@ -103,9 +103,16 @@ export default function ProizvodiPageEditor() {
 
   useEffect(() => {
     fetch("/api/settings").then(r => r.json()).then(s => {
-      try { setHero(JSON.parse(s[`proizvodi_${slug}_hero`])); } catch {}
-      try { setFeature(JSON.parse(s[`proizvodi_${slug}_feature`])); } catch {}
-      try { setCta(JSON.parse(s[`proizvodi_${slug}_cta`])); } catch {}
+      const defaultHero: Hero = { eyebrow: "Proizvodi", h1: slug.replace(/-/g, " "), h1Highlight: "", lead: "", heroBg: "", stats: [], ghostLabel: "Pogledajte realizacije", ghostHref: "/realizacije" };
+      const defaultFeature: Feature = { badge: "", h2: "", p: "", li: [], img: "" };
+      const defaultCta: Cta = { h2: "Trebate ponudu?", p: "Kontaktirajte nas za besplatnu konsultaciju." };
+      try { setHero(JSON.parse(s[`proizvodi_${slug}_hero`])); } catch { setHero(defaultHero); }
+      try { setFeature(JSON.parse(s[`proizvodi_${slug}_feature`])); } catch { setFeature(defaultFeature); }
+      try { setCta(JSON.parse(s[`proizvodi_${slug}_cta`])); } catch { setCta(defaultCta); }
+      // If settings exist but are null/empty, still set defaults
+      if (!s[`proizvodi_${slug}_hero`]) setHero(defaultHero);
+      if (!s[`proizvodi_${slug}_feature`]) setFeature(defaultFeature);
+      if (!s[`proizvodi_${slug}_cta`]) setCta(defaultCta);
     });
   }, [slug]);
 
