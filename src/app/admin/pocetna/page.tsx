@@ -90,6 +90,7 @@ export default function PocetnaAdmin() {
   const [seo, setSeo] = useState<SeoData>(DEFAULT_SEO);
   const [values, setValues] = useState<ValuesData>(DEFAULT_VALUES);
   const [industries, setIndustries] = useState<IndustriesData>(DEFAULT_INDUSTRIES);
+  const [pageOptions, setPageOptions] = useState<{ label: string; href: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
 
@@ -100,6 +101,37 @@ export default function PocetnaAdmin() {
       try { setSeo({ ...DEFAULT_SEO, ...JSON.parse(s.homepage_seo) }); } catch {}
       try { setValues({ ...DEFAULT_VALUES, ...JSON.parse(s.homepage_values) }); } catch {}
       try { setIndustries({ ...DEFAULT_INDUSTRIES, ...JSON.parse(s.homepage_industries) }); } catch {}
+
+      // Build page picker options from known settings keys
+      const opts: { label: string; href: string }[] = [
+        { label: "— Unesite ručno —", href: "" },
+      ];
+      // Rješenja pages
+      try {
+        const pages: { slug: string; label: string }[] = JSON.parse(s.rjesenja_pages ?? "[]");
+        pages.forEach(p => opts.push({ label: `Rješenja › ${p.label}`, href: `/rjesenja/${p.slug}` }));
+      } catch {}
+      // Proizvodi (fixed slugs)
+      const prodslugs = [
+        { slug: "rashladne-vitrine", label: "Rashladne vitrine" },
+        { slug: "frizideri-komore", label: "Frižideri & Komore" },
+        { slug: "checkout-kase", label: "Checkout & Kasa pultovi" },
+        { slug: "policni-sistemi", label: "Polični sistemi" },
+        { slug: "inox-kuhinja", label: "Inox & Kuhinjska oprema" },
+        { slug: "kolica-korpe", label: "Kolica & Korpe" },
+        { slug: "usmjeravanje", label: "Sistemi za usmjeravanje" },
+      ];
+      prodslugs.forEach(p => opts.push({ label: `Proizvodi › ${p.label}`, href: `/proizvodi/${p.slug}` }));
+      // Static pages
+      opts.push(
+        { label: "Realizacije", href: "/realizacije" },
+        { label: "Blog", href: "/blog" },
+        { label: "O nama", href: "/o-nama" },
+        { label: "Kontakt", href: "/kontakt" },
+        { label: "Dizajn enterijera", href: "/dizajn-enterijera" },
+        { label: "Pomoć u izboru", href: "/pomoc-u-izboru" },
+      );
+      setPageOptions(opts);
     });
   }, []);
 
@@ -302,8 +334,28 @@ export default function PocetnaAdmin() {
                   <input value={card.title} onChange={e => { const c = [...industries.cards]; c[i] = { ...c[i], title: e.target.value }; setIndustries({ ...industries, cards: c }); }} style={inp} placeholder="Supermarketi & Maloprodaja" />
                 </div>
                 <div>
-                  <label style={lbl}>Link (href)</label>
-                  <input value={card.href} onChange={e => { const c = [...industries.cards]; c[i] = { ...c[i], href: e.target.value }; setIndustries({ ...industries, cards: c }); }} style={inp} placeholder="/rjesenja/supermarketi" />
+                  <label style={lbl}>Link — odaberite stranicu</label>
+                  {pageOptions.length > 1 ? (
+                    <select
+                      value={pageOptions.some(o => o.href === card.href) ? card.href : "__custom__"}
+                      onChange={e => {
+                        if (e.target.value === "__custom__") return;
+                        const c = [...industries.cards]; c[i] = { ...c[i], href: e.target.value }; setIndustries({ ...industries, cards: c });
+                      }}
+                      style={{ ...inp, cursor: "pointer" }}
+                    >
+                      {pageOptions.map(o => <option key={o.href} value={o.href || "__custom__"}>{o.label}</option>)}
+                      {!pageOptions.some(o => o.href === card.href) && card.href && (
+                        <option value={card.href}>{card.href}</option>
+                      )}
+                    </select>
+                  ) : (
+                    <input value={card.href} onChange={e => { const c = [...industries.cards]; c[i] = { ...c[i], href: e.target.value }; setIndustries({ ...industries, cards: c }); }} style={inp} placeholder="/rjesenja/supermarketi" />
+                  )}
+                  {/* Manual override if custom URL needed */}
+                  {pageOptions.length > 1 && !pageOptions.some(o => o.href === card.href) && (
+                    <input value={card.href} onChange={e => { const c = [...industries.cards]; c[i] = { ...c[i], href: e.target.value }; setIndustries({ ...industries, cards: c }); }} style={{ ...inp, marginTop: 6 }} placeholder="ili unesite URL ručno..." />
+                  )}
                 </div>
               </div>
               <div style={{ marginBottom: 10 }}>
