@@ -1,14 +1,48 @@
+"use client";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { useEffect, useState } from "react";
 
-export default async function StraniceProizvodiPage() {
-  const categories = await prisma.productCategory.findMany({ orderBy: { order: "asc" } });
+type Category = { id: string; name: string; slug: string; order: number };
+
+export default function StraniceProizvodiPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/categories").then(r => r.json()).then(setCategories);
+  }, []);
+
+  async function seedFromConfig() {
+    setSeeding(true);
+    setSeedMsg("");
+    const r = await fetch("/api/admin/seed-proizvodi", { method: "POST" });
+    const data = await r.json();
+    if (data.inserted === 0) {
+      setSeedMsg("Podaci već postoje u bazi — nema šta sinhronizovati.");
+    } else {
+      setSeedMsg(`Sinhronizovano ${data.inserted} polja iz koda u bazu.`);
+    }
+    setSeeding(false);
+  }
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>Proizvodi — stranice</h1>
-        <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Uređujte hero, feature sekciju i CTA za svaku kategoriju proizvoda.</p>
+      <div style={{ marginBottom: 28, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>Proizvodi — stranice</h1>
+          <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Uređujte hero, feature sekciju i CTA za svaku kategoriju proizvoda.</p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <button
+            onClick={seedFromConfig}
+            disabled={seeding}
+            style={{ padding: "9px 18px", background: "#0B1D33", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: seeding ? "not-allowed" : "pointer", opacity: seeding ? 0.7 : 1 }}
+          >
+            {seeding ? "Sinhronizujem..." : "⬇ Popuni iz koda"}
+          </button>
+          {seedMsg && <span style={{ fontSize: 12, color: "#0F766E" }}>{seedMsg}</span>}
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
