@@ -52,7 +52,7 @@ const DEFAULT_CLIENTS = [
 ];
 
 export default async function HomePage() {
-  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting] = await Promise.all([
+  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting, homepageIndustriesSetting] = await Promise.all([
     prisma.blogPost.findMany({
       where: { published: true },
       orderBy: { publishedAt: "desc" },
@@ -62,6 +62,7 @@ export default async function HomePage() {
     prisma.settings.findUnique({ where: { key: "homepage_hero" } }),
     prisma.settings.findUnique({ where: { key: "homepage_clients" } }),
     prisma.settings.findUnique({ where: { key: "homepage_values" } }),
+    prisma.settings.findUnique({ where: { key: "homepage_industries" } }),
   ]);
 
   let heroData = DEFAULT_HERO;
@@ -83,6 +84,21 @@ export default async function HomePage() {
   };
   let valuesData = DEFAULT_VALUES;
   try { if (homepageValuesSetting) valuesData = { ...DEFAULT_VALUES, ...JSON.parse(homepageValuesSetting.value) }; } catch {}
+
+  const DEFAULT_INDUSTRIES = {
+    eyebrow: "Rješenja po industriji",
+    h2: "Oprema prilagođena",
+    h2Highlight: "vašem tipu objekta",
+    cards: [
+      { href: "/rjesenja/supermarketi", img: "/assets/images/projects/Aromamarketi2.jpg", title: "Supermarketi & Maloprodaja", desc: "Checkout pultovi, rashladni sistemi i polični sistemi za lance do 5.000 m²." },
+      { href: "/rjesenja/mesnice-ribarnice", img: "/assets/images/projects/MesaraPlana.jpg", title: "Mesnice & Ribarnice", desc: "Rashladne vitrine, blokovi za sjeckanje i vakuum oprema za specijalizovane objekte." },
+      { href: "/rjesenja/horeca", img: "/assets/images/projects/RestoranVojvodeStepe.jpg", title: "HoReCa & Ugostiteljstvo", desc: "Inox oprema, rashladne vitrine i kuhinjski sistemi za restorane i hotele." },
+      { href: "/rjesenja/pekare", img: "/assets/images/projects/KafeSoljica3.jpg", title: "Pekare & Poslastičarnice", desc: "Rashladna i izložbena oprema za svježe i konditorske proizvode." },
+      { href: "/rjesenja/apoteke-drogerije", img: "/assets/images/projects/Apoteka-drogerija.jpg", title: "Apoteke & Drogerije", desc: "Moderna oprema za prezentaciju farmaceutskih i kozmetičkih proizvoda." },
+    ],
+  };
+  let industriesData = DEFAULT_INDUSTRIES;
+  try { if (homepageIndustriesSetting) industriesData = { ...DEFAULT_INDUSTRIES, ...JSON.parse(homepageIndustriesSetting.value) }; } catch {}
 
   // slides can be full URLs (from Blob) or just filenames (legacy)
   const slides = heroData.slides.map(s => s.startsWith("/") || s.startsWith("http") ? s : `/assets/images/hero/${s}`);
@@ -159,17 +175,11 @@ export default async function HomePage() {
       <section className="industries" id="industries">
         <div className="container">
           <div className="section-header">
-            <span className="section-eyebrow">Rješenja po industriji</span>
-            <h2>Oprema prilagođena <span className="highlight">vašem tipu objekta</span></h2>
+            <span className="section-eyebrow">{industriesData.eyebrow}</span>
+            <h2>{industriesData.h2} <span className="highlight">{industriesData.h2Highlight}</span></h2>
           </div>
           <div className="industries-grid">
-            {[
-              {href:"/rjesenja/supermarketi",img:"/assets/images/projects/Aromamarketi2.jpg",title:"Supermarketi & Maloprodaja",desc:"Checkout pultovi, rashladni sistemi i polični sistemi za lance do 5.000 m²."},
-              {href:"/rjesenja/mesnice-ribarnice",img:"/assets/images/projects/MesaraPlana.jpg",title:"Mesnice & Ribarnice",desc:"Rashladne vitrine, blokovi za sjeckanje i vakuum oprema za specijalizovane objekte."},
-              {href:"/rjesenja/horeca",img:"/assets/images/projects/RestoranVojvodeStepe.jpg",title:"HoReCa & Ugostiteljstvo",desc:"Inox oprema, rashladne vitrine i kuhinjski sistemi za restorane i hotele."},
-              {href:"/rjesenja/pekare",img:"/assets/images/projects/KafeSoljica3.jpg",title:"Pekare & Poslastičarnice",desc:"Rashladna i izložbena oprema za svježe i konditorske proizvode."},
-              {href:"/rjesenja/apoteke-drogerije",img:"/assets/images/projects/Apoteka-drogerija.jpg",title:"Apoteke & Drogerije",desc:"Moderna oprema za prezentaciju farmaceutskih i kozmetičkih proizvoda."},
-            ].map((item) => (
+            {industriesData.cards.map((item) => (
               <a key={item.href} href={item.href} className="industry-card">
                 <div className="industry-bg"><img src={item.img} alt={item.title} loading="lazy" decoding="async" /></div>
                 <div className="industry-overlay"></div>

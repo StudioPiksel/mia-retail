@@ -65,7 +65,23 @@ const DEFAULT_SEO: SeoData = {
   ogImage: "/assets/images/logo/mia-og-image.jpg",
 };
 
-type Tab = "seo" | "hero" | "values" | "clients";
+type IndustryCard = { href: string; img: string; title: string; desc: string };
+type IndustriesData = { eyebrow: string; h2: string; h2Highlight: string; cards: IndustryCard[] };
+
+const DEFAULT_INDUSTRIES: IndustriesData = {
+  eyebrow: "Rješenja po industriji",
+  h2: "Oprema prilagođena",
+  h2Highlight: "vašem tipu objekta",
+  cards: [
+    { href: "/rjesenja/supermarketi", img: "/assets/images/projects/Aromamarketi2.jpg", title: "Supermarketi & Maloprodaja", desc: "Checkout pultovi, rashladni sistemi i polični sistemi za lance do 5.000 m²." },
+    { href: "/rjesenja/mesnice-ribarnice", img: "/assets/images/projects/MesaraPlana.jpg", title: "Mesnice & Ribarnice", desc: "Rashladne vitrine, blokovi za sjeckanje i vakuum oprema za specijalizovane objekte." },
+    { href: "/rjesenja/horeca", img: "/assets/images/projects/RestoranVojvodeStepe.jpg", title: "HoReCa & Ugostiteljstvo", desc: "Inox oprema, rashladne vitrine i kuhinjski sistemi za restorane i hotele." },
+    { href: "/rjesenja/pekare", img: "/assets/images/projects/KafeSoljica3.jpg", title: "Pekare & Poslastičarnice", desc: "Rashladna i izložbena oprema za svježe i konditorske proizvode." },
+    { href: "/rjesenja/apoteke-drogerije", img: "/assets/images/projects/Apoteka-drogerija.jpg", title: "Apoteke & Drogerije", desc: "Moderna oprema za prezentaciju farmaceutskih i kozmetičkih proizvoda." },
+  ],
+};
+
+type Tab = "seo" | "hero" | "values" | "clients" | "industries";
 
 export default function PocetnaAdmin() {
   const [tab, setTab] = useState<Tab>("hero");
@@ -73,6 +89,7 @@ export default function PocetnaAdmin() {
   const [clients, setClients] = useState<Client[]>(DEFAULT_CLIENTS);
   const [seo, setSeo] = useState<SeoData>(DEFAULT_SEO);
   const [values, setValues] = useState<ValuesData>(DEFAULT_VALUES);
+  const [industries, setIndustries] = useState<IndustriesData>(DEFAULT_INDUSTRIES);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
 
@@ -82,6 +99,7 @@ export default function PocetnaAdmin() {
       try { setClients(JSON.parse(s.homepage_clients)); } catch {}
       try { setSeo({ ...DEFAULT_SEO, ...JSON.parse(s.homepage_seo) }); } catch {}
       try { setValues({ ...DEFAULT_VALUES, ...JSON.parse(s.homepage_values) }); } catch {}
+      try { setIndustries({ ...DEFAULT_INDUSTRIES, ...JSON.parse(s.homepage_industries) }); } catch {}
     });
   }, []);
 
@@ -102,6 +120,7 @@ export default function PocetnaAdmin() {
     { key: "hero", label: "Hero", icon: "🏠" },
     { key: "values", label: "Šta radimo", icon: "📋" },
     { key: "clients", label: "Klijenti", icon: "🏢" },
+    { key: "industries", label: "Industrije", icon: "🏪" },
     { key: "seo", label: "SEO", icon: "🔍" },
   ];
 
@@ -246,6 +265,70 @@ export default function PocetnaAdmin() {
           ))}
         </Row>
         <Btn onClick={() => save("homepage_values", values)} saving={saving} label="Sačuvaj sekciju" />
+      </Sec></>}
+
+      {/* ── INDUSTRIJE GRID ── */}
+      {tab === "industries" && <>
+      <Sec title="Sekcija 'Rješenja po industriji' — Naslov" saved={saved === "homepage_industries"}>
+        <Row label="Eyebrow badge"><TI value={industries.eyebrow} set={v => setIndustries({ ...industries, eyebrow: v })} /></Row>
+        <Row label="H2 naslov (prvi dio)"><TI value={industries.h2} set={v => setIndustries({ ...industries, h2: v })} /></Row>
+        <Row label="H2 istaknuti dio (teal)"><TI value={industries.h2Highlight} set={v => setIndustries({ ...industries, h2Highlight: v })} /></Row>
+      </Sec>
+      <Sec title="Kartice industrija" saved={saved === "homepage_industries"}>
+        <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 14px" }}>
+          Svaka kartica vodi na stranicu rješenja. Slika se prikazuje kao pozadina kartice — preporučena veličina: 800×600px.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {industries.cards.map((card, i) => (
+            <div key={i} style={{ padding: "16px 18px", border: "1px solid #E2E8ED", borderRadius: 12, background: "#F8FAFB" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#0F766E" }}>Kartica {i + 1}</span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={() => {
+                    if (i === 0) return;
+                    const c = [...industries.cards]; [c[i - 1], c[i]] = [c[i], c[i - 1]]; setIndustries({ ...industries, cards: c });
+                  }} disabled={i === 0} style={{ padding: "4px 8px", background: "#E6EEF2", border: "none", borderRadius: 5, cursor: i === 0 ? "not-allowed" : "pointer", opacity: i === 0 ? 0.4 : 1, fontSize: 13 }}>↑</button>
+                  <button onClick={() => {
+                    if (i === industries.cards.length - 1) return;
+                    const c = [...industries.cards]; [c[i], c[i + 1]] = [c[i + 1], c[i]]; setIndustries({ ...industries, cards: c });
+                  }} disabled={i === industries.cards.length - 1} style={{ padding: "4px 8px", background: "#E6EEF2", border: "none", borderRadius: 5, cursor: i === industries.cards.length - 1 ? "not-allowed" : "pointer", opacity: i === industries.cards.length - 1 ? 0.4 : 1, fontSize: 13 }}>↓</button>
+                  <button onClick={() => setIndustries({ ...industries, cards: industries.cards.filter((_, idx) => idx !== i) })}
+                    style={{ padding: "4px 10px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 5, cursor: "pointer", fontSize: 13 }}>✕</button>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div>
+                  <label style={lbl}>Naslov kartice</label>
+                  <input value={card.title} onChange={e => { const c = [...industries.cards]; c[i] = { ...c[i], title: e.target.value }; setIndustries({ ...industries, cards: c }); }} style={inp} placeholder="Supermarketi & Maloprodaja" />
+                </div>
+                <div>
+                  <label style={lbl}>Link (href)</label>
+                  <input value={card.href} onChange={e => { const c = [...industries.cards]; c[i] = { ...c[i], href: e.target.value }; setIndustries({ ...industries, cards: c }); }} style={inp} placeholder="/rjesenja/supermarketi" />
+                </div>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <label style={lbl}>Kratki opis</label>
+                <input value={card.desc} onChange={e => { const c = [...industries.cards]; c[i] = { ...c[i], desc: e.target.value }; setIndustries({ ...industries, cards: c }); }} style={inp} placeholder="Kratki opis koji se prikazuje na kartici..." />
+              </div>
+              <div>
+                <label style={lbl}>Pozadinska slika</label>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  {card.img && <img src={card.img} alt="" style={{ width: 100, height: 64, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />}
+                  <div style={{ flex: 1 }}>
+                    <ImageUpload value={card.img} onChange={url => { const c = [...industries.cards]; c[i] = { ...c[i], img: url }; setIndustries({ ...industries, cards: c }); }} maxWidthPx={1200} qualityWebp={0.85} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => setIndustries({ ...industries, cards: [...industries.cards, { href: "", img: "", title: "", desc: "" }] })}
+          style={{ marginTop: 14, padding: "8px 16px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
+          + Dodaj karticu
+        </button>
+        <div style={{ marginTop: 16 }}>
+          <Btn onClick={() => save("homepage_industries", industries)} saving={saving} label="Sačuvaj industrije" />
+        </div>
       </Sec></>}
 
       {/* ── KLIJENTI KAROUSEL ── */}
