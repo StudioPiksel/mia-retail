@@ -111,7 +111,7 @@ const DEFAULT_INDUSTRIES: IndustriesData = {
   ],
 };
 
-type Tab = "seo" | "hero" | "values" | "clients" | "industries";
+type Tab = "seo" | "hero" | "values" | "clients" | "industries" | "realizacije";
 
 export default function PocetnaAdmin() {
   const [tab, setTab] = useState<Tab>("hero");
