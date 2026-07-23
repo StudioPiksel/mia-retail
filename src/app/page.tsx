@@ -52,7 +52,7 @@ const DEFAULT_CLIENTS = [
 ];
 
 export default async function HomePage() {
-  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting, homepageIndustriesSetting, homepageRealizacijeSetting] = await Promise.all([
+  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting, homepageIndustriesSetting, homepageRealizacijeSetting, homepageDizajnSetting] = await Promise.all([
     prisma.blogPost.findMany({
       where: { published: true },
       orderBy: { publishedAt: "desc" },
@@ -64,6 +64,7 @@ export default async function HomePage() {
     prisma.settings.findUnique({ where: { key: "homepage_values" } }),
     prisma.settings.findUnique({ where: { key: "homepage_industries" } }),
     prisma.settings.findUnique({ where: { key: "homepage_realizacije" } }),
+    prisma.settings.findUnique({ where: { key: "homepage_dizajn" } }),
   ]);
 
   let heroData = DEFAULT_HERO;
@@ -120,6 +121,24 @@ export default async function HomePage() {
   };
   let realizacijeData = DEFAULT_REALIZACIJE;
   try { if (homepageRealizacijeSetting) realizacijeData = { ...DEFAULT_REALIZACIJE, ...JSON.parse(homepageRealizacijeSetting.value) }; } catch {}
+
+  const DEFAULT_DIZAJN = {
+    eyebrow: "Projektovanje i dizajn",
+    h2: "Dizajn enterijera za",
+    h2Highlight: "retail i HoReCa — od ideje do realizacije",
+    lead: "Uz isporuku i montažu opreme, kreiramo i kompletna dizajnerska rješenja prostora — u saradnji sa renomiranim retail i HoReCa design studijima.",
+    services: [
+      "Razvoj idejnih koncepata i dizajnerskih rješenja enterijera",
+      "Adaptacija koncepata za različita tržišta i formate",
+      "Optimizacija postojećih prodajnih prostora",
+      "Koordinacija od koncepta do realizacije na ključ",
+    ],
+    nota: "2 partnerska studija · 21 idejni koncept za supermarkete, markete, apoteke i ugostiteljske objekte",
+    btnLabel: "Saznajte više o dizajnu enterijera",
+    btnHref: "/dizajn-enterijera",
+  };
+  let dizajnData = DEFAULT_DIZAJN;
+  try { if (homepageDizajnSetting) dizajnData = { ...DEFAULT_DIZAJN, ...JSON.parse(homepageDizajnSetting.value) }; } catch {}
 
   // slides can be full URLs (from Blob) or just filenames (legacy)
   const slides = heroData.slides.map(s => s.startsWith("/") || s.startsWith("http") ? s : `/assets/images/hero/${s}`);
@@ -252,11 +271,11 @@ export default async function HomePage() {
       <section className="design-section design-teaser" id="dizajn">
         <div className="container">
           <div className="design-intro">
-            <span className="section-eyebrow">Projektovanje i dizajn</span>
-            <h2>Dizajn enterijera za <span className="highlight">retail i HoReCa</span> — od ideje do realizacije</h2>
-            <p className="lead">Uz isporuku i montažu opreme, kreiramo i kompletna dizajnerska rješenja prostora — u saradnji sa renomiranim retail i HoReCa design studijima.</p>
+            <span className="section-eyebrow">{dizajnData.eyebrow}</span>
+            <h2>{dizajnData.h2} <span className="highlight">{dizajnData.h2Highlight}</span></h2>
+            <p className="lead">{dizajnData.lead}</p>
             <div className="design-services">
-              {["Razvoj idejnih koncepata i dizajnerskih rješenja enterijera","Adaptacija koncepata za različita tržišta i formate","Optimizacija postojećih prodajnih prostora","Koordinacija od koncepta do realizacije na ključ"].map((s)=>(
+              {dizajnData.services.map((s) => (
                 <div key={s} className="service-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><polyline points="20 6 9 17 4 12"/></svg><span>{s}</span></div>
               ))}
             </div>
@@ -275,8 +294,8 @@ export default async function HomePage() {
         </div>
         <div className="container">
           <div className="design-teaser-actions">
-            <span className="design-teaser-note"><strong>2 partnerska studija</strong> · 21 idejni koncept za supermarkete, markete, apoteke i ugostiteljske objekte</span>
-            <Link href="/dizajn-enterijera" className="btn-primary">Saznajte više o dizajnu enterijera <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></Link>
+            <span className="design-teaser-note">{dizajnData.nota}</span>
+            <Link href={dizajnData.btnHref} className="btn-primary">{dizajnData.btnLabel} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></Link>
           </div>
         </div>
       </section>

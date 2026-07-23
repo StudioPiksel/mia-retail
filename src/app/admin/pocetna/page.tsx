@@ -65,6 +65,27 @@ const DEFAULT_SEO: SeoData = {
   ogImage: "/assets/images/logo/mia-og-image.jpg",
 };
 
+type DizajnData = {
+  eyebrow: string; h2: string; h2Highlight: string; lead: string;
+  services: string[]; nota: string; btnLabel: string; btnHref: string;
+};
+
+const DEFAULT_DIZAJN: DizajnData = {
+  eyebrow: "Projektovanje i dizajn",
+  h2: "Dizajn enterijera za",
+  h2Highlight: "retail i HoReCa — od ideje do realizacije",
+  lead: "Uz isporuku i montažu opreme, kreiramo i kompletna dizajnerska rješenja prostora — u saradnji sa renomiranim retail i HoReCa design studijima.",
+  services: [
+    "Razvoj idejnih koncepata i dizajnerskih rješenja enterijera",
+    "Adaptacija koncepata za različita tržišta i formate",
+    "Optimizacija postojećih prodajnih prostora",
+    "Koordinacija od koncepta do realizacije na ključ",
+  ],
+  nota: "2 partnerska studija · 21 idejni koncept za supermarkete, markete, apoteke i ugostiteljske objekte",
+  btnLabel: "Saznajte više o dizajnu enterijera",
+  btnHref: "/dizajn-enterijera",
+};
+
 type RealizacijeSlide = { img: string; alt: string };
 type RealizacijeStat = { num: string; label: string };
 type RealizacijeData = {
@@ -111,7 +132,7 @@ const DEFAULT_INDUSTRIES: IndustriesData = {
   ],
 };
 
-type Tab = "seo" | "hero" | "values" | "clients" | "industries" | "realizacije";
+type Tab = "seo" | "hero" | "values" | "clients" | "industries" | "realizacije" | "dizajn";
 
 export default function PocetnaAdmin() {
   const [tab, setTab] = useState<Tab>("hero");
@@ -121,6 +142,7 @@ export default function PocetnaAdmin() {
   const [values, setValues] = useState<ValuesData>(DEFAULT_VALUES);
   const [industries, setIndustries] = useState<IndustriesData>(DEFAULT_INDUSTRIES);
   const [realizacije, setRealizacije] = useState<RealizacijeData>(DEFAULT_REALIZACIJE);
+  const [dizajn, setDizajn] = useState<DizajnData>(DEFAULT_DIZAJN);
   const [pageOptions, setPageOptions] = useState<{ label: string; href: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
@@ -133,6 +155,7 @@ export default function PocetnaAdmin() {
       try { setValues({ ...DEFAULT_VALUES, ...JSON.parse(s.homepage_values) }); } catch {}
       try { setIndustries({ ...DEFAULT_INDUSTRIES, ...JSON.parse(s.homepage_industries) }); } catch {}
       try { setRealizacije({ ...DEFAULT_REALIZACIJE, ...JSON.parse(s.homepage_realizacije) }); } catch {}
+      try { setDizajn({ ...DEFAULT_DIZAJN, ...JSON.parse(s.homepage_dizajn) }); } catch {}
 
       // Build page picker options from known settings keys
       const opts: { label: string; href: string }[] = [
@@ -186,6 +209,7 @@ export default function PocetnaAdmin() {
     { key: "clients", label: "Klijenti", icon: "🏢" },
     { key: "industries", label: "Industrije", icon: "🏪" },
     { key: "realizacije", label: "Realizacije", icon: "🏆" },
+    { key: "dizajn", label: "Dizajn", icon: "🎨" },
     { key: "seo", label: "SEO", icon: "🔍" },
   ];
 
@@ -330,6 +354,45 @@ export default function PocetnaAdmin() {
           ))}
         </Row>
         <Btn onClick={() => save("homepage_values", values)} saving={saving} label="Sačuvaj sekciju" />
+      </Sec></>}
+
+      {/* ── DIZAJN TEASER ── */}
+      {tab === "dizajn" && <>
+      <Sec title="Tekst sekcije" saved={saved === "homepage_dizajn"}>
+        <Row label="Eyebrow badge"><TI value={dizajn.eyebrow} set={v => setDizajn({ ...dizajn, eyebrow: v })} /></Row>
+        <Row label="H2 naslov (prvi dio)"><TI value={dizajn.h2} set={v => setDizajn({ ...dizajn, h2: v })} /></Row>
+        <Row label="H2 istaknuti dio (teal)"><TI value={dizajn.h2Highlight} set={v => setDizajn({ ...dizajn, h2Highlight: v })} /></Row>
+        <Row label="Opis (lead tekst)"><TA value={dizajn.lead} set={v => setDizajn({ ...dizajn, lead: v })} rows={3} /></Row>
+        <Btn onClick={() => save("homepage_dizajn", dizajn)} saving={saving} label="Sačuvaj tekst" />
+      </Sec>
+
+      <Sec title="Bullet tačke (usluge)" saved={saved === "homepage_dizajn"}>
+        <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 12px" }}>Checkmark lista ispod opisa — svaka stavka u jednoj liniji.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {dizajn.services.map((s, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={{ color: "#0F766E", fontSize: 16, flexShrink: 0 }}>✓</span>
+              <input value={s} onChange={e => { const sv = [...dizajn.services]; sv[i] = e.target.value; setDizajn({ ...dizajn, services: sv }); }} style={{ ...inp, flex: 1 }} />
+              <button onClick={() => setDizajn({ ...dizajn, services: dizajn.services.filter((_, idx) => idx !== i) })}
+                style={{ padding: "8px 10px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>✕</button>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => setDizajn({ ...dizajn, services: [...dizajn.services, ""] })}
+          style={{ marginTop: 10, padding: "6px 14px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
+          + Dodaj stavku
+        </button>
+        <div style={{ marginTop: 14 }}>
+          <Btn onClick={() => save("homepage_dizajn", dizajn)} saving={saving} label="Sačuvaj bullet tačke" />
+        </div>
+      </Sec>
+
+      <Sec title="Nota ispod image stripa i dugme" saved={saved === "homepage_dizajn"}>
+        <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 12px" }}>Tekst koji se prikazuje desno od image trake (npr. "2 partnerska studija · 21 idejni koncept...").</p>
+        <Row label="Nota tekst"><TA value={dizajn.nota} set={v => setDizajn({ ...dizajn, nota: v })} rows={2} /></Row>
+        <Row label="Dugme — tekst"><TI value={dizajn.btnLabel} set={v => setDizajn({ ...dizajn, btnLabel: v })} /></Row>
+        <Row label="Dugme — link"><TI value={dizajn.btnHref} set={v => setDizajn({ ...dizajn, btnHref: v })} /></Row>
+        <Btn onClick={() => save("homepage_dizajn", dizajn)} saving={saving} label="Sačuvaj" />
       </Sec></>}
 
       {/* ── REALIZACIJE ── */}
