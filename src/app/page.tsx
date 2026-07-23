@@ -52,7 +52,7 @@ const DEFAULT_CLIENTS = [
 ];
 
 export default async function HomePage() {
-  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting, homepageIndustriesSetting, homepageRealizacijeSetting, homepageDizajnSetting] = await Promise.all([
+  const [blogPosts, homepageHeroSetting, homepageClientsSetting, homepageValuesSetting, homepageIndustriesSetting, homepageRealizacijeSetting, homepageDizajnSetting, homepageProcessSetting] = await Promise.all([
     prisma.blogPost.findMany({
       where: { published: true },
       orderBy: { publishedAt: "desc" },
@@ -65,6 +65,7 @@ export default async function HomePage() {
     prisma.settings.findUnique({ where: { key: "homepage_industries" } }),
     prisma.settings.findUnique({ where: { key: "homepage_realizacije" } }),
     prisma.settings.findUnique({ where: { key: "homepage_dizajn" } }),
+    prisma.settings.findUnique({ where: { key: "homepage_process" } }),
   ]);
 
   let heroData = DEFAULT_HERO;
@@ -139,6 +140,27 @@ export default async function HomePage() {
   };
   let dizajnData = DEFAULT_DIZAJN;
   try { if (homepageDizajnSetting) dizajnData = { ...DEFAULT_DIZAJN, ...JSON.parse(homepageDizajnSetting.value) }; } catch {}
+
+  const DEFAULT_PROCESS = {
+    eyebrow: "Proces saradnje",
+    h2: "Od prvog poziva do",
+    h2Highlight: "otvaranja objekta",
+    desc: "Vodimo vas kroz svaki korak — transparentno, profesionalno, bez iznenađenja.",
+    steps: [
+      { num: "01", title: "Konsultacija", desc: "Analiziramo prostor, potrebe i budžet. Besplatna procjena za sve nove projekte." },
+      { num: "02", title: "Ponuda & Plan", desc: "Izrađujemo detaljnu ponudu s planom rasporeda opreme i vremenskim okvirom." },
+      { num: "03", title: "Isporuka & Montaža", desc: "Koordiniramo sve dobavljače i obavljamo montažu prema dogovorenom planu." },
+      { num: "04", title: "Podrška & Servis", desc: "Dugogodišnja tehnička podrška i servisiranje sve isporučene opreme." },
+    ],
+    stats: [
+      { num: "200+", label: "Realizovanih projekata\nna 3 kontinenta" },
+      { num: "12+", label: "Premium brendova opreme\nu ekskluzivnoj ponudi" },
+      { num: "15+", label: "Godina iskustva\nu industriji" },
+      { num: "24h", label: "Garancija odgovora\nna svaki upit" },
+    ],
+  };
+  let processData = DEFAULT_PROCESS;
+  try { if (homepageProcessSetting) processData = { ...DEFAULT_PROCESS, ...JSON.parse(homepageProcessSetting.value) }; } catch {}
 
   // slides can be full URLs (from Blob) or just filenames (legacy)
   const slides = heroData.slides.map(s => s.startsWith("/") || s.startsWith("http") ? s : `/assets/images/hero/${s}`);
@@ -304,18 +326,21 @@ export default async function HomePage() {
       <section className="process" id="process">
         <div className="container">
           <div className="section-header">
-            <span className="section-eyebrow">Proces saradnje</span>
-            <h2>Od prvog poziva do <span className="highlight">otvaranja objekta</span></h2>
-            <p className="section-desc">Vodimo vas kroz svaki korak — transparentno, profesionalno, bez iznenađenja.</p>
+            <span className="section-eyebrow">{processData.eyebrow}</span>
+            <h2>{processData.h2} <span className="highlight">{processData.h2Highlight}</span></h2>
+            <p className="section-desc">{processData.desc}</p>
           </div>
           <div className="process-steps">
-            <div className="process-step"><div className="step-number">01</div><h4>Konsultacija</h4><p>Analiziramo prostor, potrebe i budžet. Besplatna procjena za sve nove projekte.</p></div>
-            <div className="process-connector"></div>
-            <div className="process-step"><div className="step-number">02</div><h4>Ponuda & Plan</h4><p>Izrađujemo detaljnu ponudu s planom rasporeda opreme i vremenskim okvirom.</p></div>
-            <div className="process-connector"></div>
-            <div className="process-step"><div className="step-number">03</div><h4>Isporuka & Montaža</h4><p>Koordiniramo sve dobavljače i obavljamo montažu prema dogovorenom planu.</p></div>
-            <div className="process-connector"></div>
-            <div className="process-step"><div className="step-number">04</div><h4>Podrška & Servis</h4><p>Dugogodišnja tehnička podrška i servisiranje sve isporučene opreme.</p></div>
+            {processData.steps.map((step, i) => (
+              <>
+                {i > 0 && <div key={`c-${i}`} className="process-connector"></div>}
+                <div key={step.num} className="process-step">
+                  <div className="step-number">{step.num}</div>
+                  <h4>{step.title}</h4>
+                  <p>{step.desc}</p>
+                </div>
+              </>
+            ))}
           </div>
         </div>
       </section>
@@ -324,10 +349,14 @@ export default async function HomePage() {
       <section className="stats-banner">
         <div className="container">
           <div className="stats-grid">
-            <div className="stat-item"><span className="stat-number">200+</span><span className="stat-text">Realizovanih projekata<br />na 3 kontinenta</span></div>
-            <div className="stat-item"><span className="stat-number">12+</span><span className="stat-text">Premium brendova opreme<br />u ekskluzivnoj ponudi</span></div>
-            <div className="stat-item"><span className="stat-number">15+</span><span className="stat-text">Godina iskustva<br />u industriji</span></div>
-            <div className="stat-item"><span className="stat-number">24h</span><span className="stat-text">Garancija odgovora<br />na svaki upit</span></div>
+            {processData.stats.map((stat, i) => (
+              <div key={i} className="stat-item">
+                <span className="stat-number">{stat.num}</span>
+                <span className="stat-text">{stat.label.split("\n").map((line, j) => (
+                  <span key={j}>{line}{j < stat.label.split("\n").length - 1 && <br />}</span>
+                ))}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>

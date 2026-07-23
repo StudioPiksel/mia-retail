@@ -65,6 +65,33 @@ const DEFAULT_SEO: SeoData = {
   ogImage: "/assets/images/logo/mia-og-image.jpg",
 };
 
+type ProcessStep = { num: string; title: string; desc: string };
+type StatItem = { num: string; label: string };
+type ProcessData = {
+  eyebrow: string; h2: string; h2Highlight: string; desc: string;
+  steps: ProcessStep[];
+  stats: StatItem[];
+};
+
+const DEFAULT_PROCESS: ProcessData = {
+  eyebrow: "Proces saradnje",
+  h2: "Od prvog poziva do",
+  h2Highlight: "otvaranja objekta",
+  desc: "Vodimo vas kroz svaki korak — transparentno, profesionalno, bez iznenađenja.",
+  steps: [
+    { num: "01", title: "Konsultacija", desc: "Analiziramo prostor, potrebe i budžet. Besplatna procjena za sve nove projekte." },
+    { num: "02", title: "Ponuda & Plan", desc: "Izrađujemo detaljnu ponudu s planom rasporeda opreme i vremenskim okvirom." },
+    { num: "03", title: "Isporuka & Montaža", desc: "Koordiniramo sve dobavljače i obavljamo montažu prema dogovorenom planu." },
+    { num: "04", title: "Podrška & Servis", desc: "Dugogodišnja tehnička podrška i servisiranje sve isporučene opreme." },
+  ],
+  stats: [
+    { num: "200+", label: "Realizovanih projekata\nna 3 kontinenta" },
+    { num: "12+", label: "Premium brendova opreme\nu ekskluzivnoj ponudi" },
+    { num: "15+", label: "Godina iskustva\nu industriji" },
+    { num: "24h", label: "Garancija odgovora\nna svaki upit" },
+  ],
+};
+
 type DizajnData = {
   eyebrow: string; h2: string; h2Highlight: string; lead: string;
   services: string[]; nota: string; btnLabel: string; btnHref: string;
@@ -132,7 +159,7 @@ const DEFAULT_INDUSTRIES: IndustriesData = {
   ],
 };
 
-type Tab = "seo" | "hero" | "values" | "clients" | "industries" | "realizacije" | "dizajn";
+type Tab = "seo" | "hero" | "values" | "clients" | "industries" | "realizacije" | "dizajn" | "process";
 
 export default function PocetnaAdmin() {
   const [tab, setTab] = useState<Tab>("hero");
@@ -143,6 +170,7 @@ export default function PocetnaAdmin() {
   const [industries, setIndustries] = useState<IndustriesData>(DEFAULT_INDUSTRIES);
   const [realizacije, setRealizacije] = useState<RealizacijeData>(DEFAULT_REALIZACIJE);
   const [dizajn, setDizajn] = useState<DizajnData>(DEFAULT_DIZAJN);
+  const [process, setProcess] = useState<ProcessData>(DEFAULT_PROCESS);
   const [pageOptions, setPageOptions] = useState<{ label: string; href: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
@@ -156,6 +184,7 @@ export default function PocetnaAdmin() {
       try { setIndustries({ ...DEFAULT_INDUSTRIES, ...JSON.parse(s.homepage_industries) }); } catch {}
       try { setRealizacije({ ...DEFAULT_REALIZACIJE, ...JSON.parse(s.homepage_realizacije) }); } catch {}
       try { setDizajn({ ...DEFAULT_DIZAJN, ...JSON.parse(s.homepage_dizajn) }); } catch {}
+      try { setProcess({ ...DEFAULT_PROCESS, ...JSON.parse(s.homepage_process) }); } catch {}
 
       // Build page picker options from known settings keys
       const opts: { label: string; href: string }[] = [
@@ -210,6 +239,7 @@ export default function PocetnaAdmin() {
     { key: "industries", label: "Industrije", icon: "🏪" },
     { key: "realizacije", label: "Realizacije", icon: "🏆" },
     { key: "dizajn", label: "Dizajn", icon: "🎨" },
+    { key: "process", label: "Proces", icon: "🔄" },
     { key: "seo", label: "SEO", icon: "🔍" },
   ];
 
@@ -354,6 +384,60 @@ export default function PocetnaAdmin() {
           ))}
         </Row>
         <Btn onClick={() => save("homepage_values", values)} saving={saving} label="Sačuvaj sekciju" />
+      </Sec></>}
+
+      {/* ── PROCES ── */}
+      {tab === "process" && <>
+      <Sec title="Naslov sekcije" saved={saved === "homepage_process"}>
+        <Row label="Eyebrow badge"><TI value={process.eyebrow} set={v => setProcess({ ...process, eyebrow: v })} /></Row>
+        <Row label="H2 naslov (prvi dio)"><TI value={process.h2} set={v => setProcess({ ...process, h2: v })} /></Row>
+        <Row label="H2 istaknuti dio (teal)"><TI value={process.h2Highlight} set={v => setProcess({ ...process, h2Highlight: v })} /></Row>
+        <Row label="Opis ispod naslova"><TI value={process.desc} set={v => setProcess({ ...process, desc: v })} /></Row>
+        <Btn onClick={() => save("homepage_process", process)} saving={saving} label="Sačuvaj naslov" />
+      </Sec>
+
+      <Sec title="Koraci procesa" saved={saved === "homepage_process"}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {process.steps.map((step, i) => (
+            <div key={i} style={{ padding: "14px 16px", border: "1px solid #E2E8ED", borderRadius: 10, background: "#F8FAFB" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0F766E" }}>Korak {step.num}</span>
+                <input value={step.num} onChange={e => { const s = [...process.steps]; s[i] = { ...s[i], num: e.target.value }; setProcess({ ...process, steps: s }); }}
+                  style={{ ...inp, width: 60, textAlign: "center" }} placeholder="01" />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <TI placeholder="Naslov koraka" value={step.title} set={v => { const s = [...process.steps]; s[i] = { ...s[i], title: v }; setProcess({ ...process, steps: s }); }} />
+                <TA value={step.desc} set={v => { const s = [...process.steps]; s[i] = { ...s[i], desc: v }; setProcess({ ...process, steps: s }); }} rows={2} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 14 }}>
+          <Btn onClick={() => save("homepage_process", process)} saving={saving} label="Sačuvaj korake" />
+        </div>
+      </Sec>
+
+      <Sec title="Statistike (banner ispod procesa)" saved={saved === "homepage_process"}>
+        <p style={{ fontSize: 13, color: "#6B7B8A", margin: "0 0 12px" }}>Tamnoplavi banner sa brojkama — 200+, 12+, 15+, 24h.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {process.stats.map((stat, i) => (
+            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <TI placeholder="200+" value={stat.num} set={v => { const s = [...process.stats]; s[i] = { ...s[i], num: v }; setProcess({ ...process, stats: s }); }} />
+              <div style={{ flex: 2 }}>
+                <TA value={stat.label} set={v => { const s = [...process.stats]; s[i] = { ...s[i], label: v }; setProcess({ ...process, stats: s }); }} rows={2} />
+              </div>
+              <button onClick={() => setProcess({ ...process, stats: process.stats.filter((_, idx) => idx !== i) })}
+                style={{ padding: "8px 10px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0, marginTop: 2 }}>✕</button>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => setProcess({ ...process, stats: [...process.stats, { num: "", label: "" }] })}
+          style={{ marginTop: 10, padding: "6px 14px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13, fontFamily: "'Satoshi', sans-serif" }}>
+          + Dodaj statistiku
+        </button>
+        <div style={{ marginTop: 14 }}>
+          <Btn onClick={() => save("homepage_process", process)} saving={saving} label="Sačuvaj statistike" />
+        </div>
       </Sec></>}
 
       {/* ── DIZAJN TEASER ── */}
