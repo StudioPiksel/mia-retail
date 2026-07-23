@@ -15,6 +15,7 @@ export default function NavigacijaAdmin() {
   const [proizvodi, setProizvodi] = useState<ProizvodiItem[]>([]);
   const [pages, setPages] = useState<RjesenjaPage[]>([]);
   const [section, setSection] = useState<Section>("nav");
+  const [allCategories, setAllCategories] = useState<{ slug: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
   const [newItem, setNewItem] = useState({ label: "", url: "", type: "link" });
@@ -30,6 +31,8 @@ export default function NavigacijaAdmin() {
     try { setRjesenja(JSON.parse(settingsRes.megamenu_rjesenja ?? "[]")); } catch {}
     try { setProizvodi(JSON.parse(settingsRes.megamenu_proizvodi ?? "[]")); } catch {}
     try { setPages(JSON.parse(settingsRes.rjesenja_pages ?? "[]")); } catch {}
+    const cats = await fetch("/api/admin/categories").then(r => r.json()).catch(() => []);
+    setAllCategories(Array.isArray(cats) ? cats : []);
   }
   useEffect(() => { load(); }, []);
 
@@ -218,9 +221,15 @@ export default function NavigacijaAdmin() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
             {proizvodi.map((item, i) => (
               <div key={item.slug} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", overflow: "hidden" }}>
-                <div style={{ padding: "10px 14px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#0B1D33" }}>{item.title}</span>
-                  <span style={{ fontSize: 11, color: "#6B7B8A", marginLeft: 8 }}>/proizvodi/{item.slug}</span>
+                <div style={{ padding: "10px 14px", background: "#F8FAFB", borderBottom: "1px solid #E2E8ED", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#0B1D33" }}>{item.title}</span>
+                    <span style={{ fontSize: 11, color: "#6B7B8A", marginLeft: 8 }}>/proizvodi/{item.slug}</span>
+                  </div>
+                  <button
+                    onClick={() => { if (!confirm(`Ukloniti "${item.title}" iz menija?`)) return; setProizvodi(proizvodi.filter((_, idx) => idx !== i)); }}
+                    style={{ padding: "4px 10px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600 }}
+                  >✕ Ukloni</button>
                 </div>
                 <div style={{ padding: "14px" }}>
                   <ImageUpload label="Thumbnail" value={item.img}
@@ -234,8 +243,39 @@ export default function NavigacijaAdmin() {
               </div>
             ))}
           </div>
+
+          {/* Dodaj karticu */}
+          {allCategories.filter(c => !proizvodi.find(p => p.slug === c.slug)).length > 0 && (
+            <div style={{ marginTop: 20, padding: "16px 18px", background: "#F0FDF4", borderRadius: 10, border: "1.5px solid #BBF7D0" }}>
+              <strong style={{ fontSize: 14, color: "#0B1D33", display: "block", marginBottom: 10 }}>+ Dodaj karticu u meni</strong>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <select
+                  id="new-prod-select"
+                  style={{ ...inp, flex: 1, minWidth: 200, cursor: "pointer" }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Odaberite kategoriju...</option>
+                  {allCategories
+                    .filter(c => !proizvodi.find(p => p.slug === c.slug))
+                    .map(c => <option key={c.slug} value={c.slug}>{c.name}</option>)
+                  }
+                </select>
+                <button
+                  onClick={() => {
+                    const sel = (document.getElementById("new-prod-select") as HTMLSelectElement).value;
+                    if (!sel) return;
+                    const cat = allCategories.find(c => c.slug === sel);
+                    if (!cat) return;
+                    setProizvodi([...proizvodi, { slug: cat.slug, title: cat.name, sub: "", img: "" }]);
+                  }}
+                  style={btnPrimary}
+                >Dodaj</button>
+              </div>
+            </div>
+          )}
+
           <button onClick={() => saveSetting("megamenu_proizvodi", proizvodi, "proizvodi")} disabled={saving}
-            style={{ ...btnPrimary, marginTop: 20 }}>
+            style={{ ...btnPrimary, marginTop: 16 }}>
             {saving ? "Čuvanje..." : "Sačuvaj Proizvodi meni"}
           </button>
         </div>
