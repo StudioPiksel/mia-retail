@@ -232,6 +232,10 @@ export default function NavigacijaAdmin() {
                   >✕ Ukloni</button>
                 </div>
                 <div style={{ padding: "14px" }}>
+                  <div style={{ marginBottom: 10 }}>
+                    <label style={lbl}>Naziv kartice (prikazuje se u meniju)</label>
+                    <input value={item.title} onChange={e => { const u = [...proizvodi]; u[i] = { ...u[i], title: e.target.value }; setProizvodi(u); }} style={inp} />
+                  </div>
                   <ImageUpload label="Thumbnail" value={item.img}
                     onChange={v => { const u = [...proizvodi]; u[i] = { ...u[i], img: v }; setProizvodi(u); }}
                     maxWidthPx={600} qualityWebp={0.80} />
