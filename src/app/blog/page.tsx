@@ -33,13 +33,11 @@ export default async function BlogPage({
       {/* HERO */}
       <section className="solution-hero blog-index-hero">
         <div className="container">
-          <div className="breadcrumb-container" style={{ border: "none", paddingBottom: 20, paddingTop: 0 }}>
-            <nav className="breadcrumb" style={{ color: "rgba(255,255,255,0.7)" }}>
-              <Link href="/" style={{ color: "rgba(255,255,255,0.7)" }}>Početna</Link>
-              <span className="sep">/</span>
-              <span className="current" style={{ color: "#fff" }}>Blog</span>
-            </nav>
-          </div>
+          <nav className="breadcrumb" style={{ marginBottom: 20 }}>
+            <Link href="/" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Početna</Link>
+            <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 8px" }}>/</span>
+            <span style={{ color: "rgba(255,255,255,0.7)" }}>Blog</span>
+          </nav>
           <div className="solution-hero-content">
             <h1>MIA Insights: <br /><em>Vodiči i trendovi</em></h1>
             <p className="hero-desc">Kratki tekstovi iz naše svakodnevne prakse koji vam pomažu da bolje razumijete opremu, izbjegnete greške i optimizujete vaš objekat.</p>

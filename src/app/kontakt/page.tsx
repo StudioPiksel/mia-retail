@@ -13,13 +13,11 @@ export default function KontaktPage() {
     <SiteLayout currentPage="/kontakt">
       <section className="solution-hero blog-index-hero">
         <div className="container">
-          <div className="breadcrumb-container" style={{ border: "none", paddingBottom: 20, paddingTop: 0 }}>
-            <nav className="breadcrumb" style={{ color: "rgba(255,255,255,0.7)" }}>
-              <Link href="/" style={{ color: "rgba(255,255,255,0.7)" }}>Početna</Link>
-              <span className="sep">/</span>
-              <span className="current" style={{ color: "#fff" }}>Kontakt</span>
-            </nav>
-          </div>
+          <nav className="breadcrumb" style={{ marginBottom: 20 }}>
+            <Link href="/" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Početna</Link>
+            <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 8px" }}>/</span>
+            <span style={{ color: "rgba(255,255,255,0.7)" }}>Kontakt</span>
+          </nav>
           <div className="solution-hero-content">
             <h1>Razgovarajmo o<br /><em>vašem projektu</em></h1>
             <p className="hero-desc">Dostupni smo za sve upite — od prve konsultacije do isporuke i servisa.</p>

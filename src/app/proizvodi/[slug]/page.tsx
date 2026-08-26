@@ -292,10 +292,12 @@ export default async function ProizvodiPage({ params }: { params: Promise<{ slug
         <div className="container">
           <div className="solution-hero-inner">
             <div className="solution-hero-text">
-              <nav className="breadcrumb" aria-label="Putanja">
-                <Link href="/">Početna</Link> <span>/</span>{" "}
-                <Link href="#">Proizvodi</Link> <span>/</span>{" "}
-                <span className="breadcrumb-current">{category.name}</span>
+              <nav className="breadcrumb" style={{ marginBottom: 20 }}>
+                <Link href="/" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Početna</Link>
+                <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 8px" }}>/</span>
+                <span style={{ color: "rgba(255,255,255,0.5)" }}>Proizvodi</span>
+                <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 8px" }}>/</span>
+                <span style={{ color: "rgba(255,255,255,0.7)" }}>{category.name}</span>
               </nav>
               <h1>
                 {cfg?.h1 ?? category.name}{" "}

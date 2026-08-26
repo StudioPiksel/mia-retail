@@ -35,10 +35,10 @@ export default function ReferencePage() {
         <div className="reference-hero-overlay"></div>
         <div className="container">
           <div className="reference-hero-content">
-            <nav className="breadcrumb" aria-label="Putanja" style={{ color: "rgba(255,255,255,0.7)", marginBottom: 20 }}>
-              <Link href="/" style={{ color: "rgba(255,255,255,0.7)" }}>Početna</Link>
-              <span className="sep"> / </span>
-              <span style={{ color: "#fff" }}>Reference</span>
+            <nav className="breadcrumb" style={{ marginBottom: 20 }}>
+              <Link href="/" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Početna</Link>
+              <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 8px" }}>/</span>
+              <span style={{ color: "rgba(255,255,255,0.7)" }}>Reference</span>
             </nav>
             <h1>Naša rješenja u vodećim <span className="highlight">svjetskim trgovinama</span></h1>
             <p className="hero-desc">Oprema koju nudimo ugrađena je u objekte vodećih svjetskih maloprodajnih lanaca. Pogledajte realizacije naših provjerenih partnera — grupisane po brendu i tipu objekta.</p>

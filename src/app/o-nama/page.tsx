@@ -37,9 +37,10 @@ export default async function ONamaPage() {
         <div className="container">
           <div className="solution-hero-inner">
             <div className="solution-hero-text">
-              <nav className="breadcrumb" aria-label="Putanja">
-                <Link href="/">Početna</Link> <span>/</span>{" "}
-                <span className="breadcrumb-current">O nama</span>
+              <nav className="breadcrumb" style={{ marginBottom: 20 }}>
+                <Link href="/" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Početna</Link>
+                <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 8px" }}>/</span>
+                <span style={{ color: "rgba(255,255,255,0.7)" }}>O nama</span>
               </nav>
               <h1>{hero.h1} <span className="highlight">{hero.h1Highlight}</span></h1>
               <p className="solution-hero-lead">{hero.lead}</p>
