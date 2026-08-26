@@ -2357,3 +2357,23 @@ body.nav-open {
         display: none !important;
     }
 }
+
+/* ── BREADCRUMB — unified across all pages ──────────────────── */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    margin-bottom: 20px;
+}
+
+.breadcrumb a {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+    color: #C7F1E6;
+}

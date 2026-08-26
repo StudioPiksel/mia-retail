@@ -14,13 +14,6 @@
     z-index: 2;
 }
 
-.reference-hero .breadcrumb a {
-    color: rgba(255, 255, 255, 0.6);
-    text-decoration: none;
-}
-.reference-hero .breadcrumb a:hover { color: var(--teal); }
-.reference-hero .breadcrumb .separator,
-.reference-hero .breadcrumb .current { color: rgba(255, 255, 255, 0.45); }
 
 .reference-hero .hero-eyebrow {
     display: inline-block;

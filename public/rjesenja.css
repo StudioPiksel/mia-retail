@@ -190,31 +190,7 @@
     text-align: left;
 }
 
-.breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 24px;
-    font-size: 0.8rem;
-}
-
-.breadcrumb a {
-    color: rgba(255,255,255,0.5);
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-.breadcrumb a:hover {
-    color: var(--teal);
-}
-
-.breadcrumb span {
-    color: rgba(255,255,255,0.3);
-}
-
-.breadcrumb span:last-child {
-    color: rgba(255,255,255,0.7);
-}
+/* breadcrumb styles moved to style.css (global) */
 
 .solution-badge {
     display: inline-block;
