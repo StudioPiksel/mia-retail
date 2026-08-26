@@ -45,7 +45,6 @@ export default function HeroForm() {
   return (
     <div className="hero-form-card">
       <div className="form-header">
-        <span className="form-badge">Besplatna procjena</span>
         <h3>Brza konsultacija</h3>
         <p>Opišite projekat — javljamo se za 24h</p>
       </div>
