@@ -205,9 +205,10 @@
 /* ---------- Closing CTA strip ---------- */
 .design-cta {
     margin-top: 64px;
+    margin-bottom: 80px;
     text-align: center;
     background: var(--navy, #0B1D33);
-    border-radius: 24px;
+    border-radius: 16px;
     padding: 48px 32px;
     position: relative;
     overflow: hidden;

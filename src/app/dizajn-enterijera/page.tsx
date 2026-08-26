@@ -23,14 +23,33 @@ const SUPPLIERS = [
 ];
 
 export default async function DizajnEnterijeraPage() {
-  const studios = await prisma.designStudio.findMany({
-    orderBy: { order: "asc" },
-    include: {
-      projects: { where: { published: true }, orderBy: { order: "asc" } },
-    },
-  });
+  const [studios, heroSetting] = await Promise.all([
+    prisma.designStudio.findMany({
+      orderBy: { order: "asc" },
+      include: { projects: { where: { published: true }, orderBy: { order: "asc" } } },
+    }),
+    prisma.settings.findUnique({ where: { key: "dizajn_hero" } }),
+  ]);
 
   const totalProjects = studios.reduce((sum, s) => sum + s.projects.length, 0);
+
+  const DEFAULT_HERO = {
+    eyebrow: "PROJEKTOVANJE I DIZAJN",
+    h1: "Dizajn enterijera za",
+    h1Highlight: "retail i HoReCa — od ideje do realizacije",
+    lead: "Uz isporuku i montažu opreme, kreiramo i kompletna dizajnerska rješenja prostora. Kroz saradnju sa renomiranim retail i HoReCa design studijima razvijamo funkcionalne i prepoznatljive enterijere — prilagođene identitetu brenda, budžetu i specifičnostima svakog projekta.",
+    stats: [
+      { num: String(studios.length), label: "Partnerska studija" },
+      { num: String(totalProjects), label: "Idejnih koncepata" },
+      { num: "Na ključ", label: "Od ideje do otvaranja" },
+    ],
+    ctaH3: "Planirate novi objekat ili redizajn postojećeg?",
+    ctaP: "Spajamo dizajn enterijera, projektovanje i opremanje na ključ — jedan partner od ideje do otvaranja. Zatražite konsultaciju i idejni koncept za vaš prostor.",
+    ctaBtn: "Zatražite idejni koncept",
+    ctaHref: "/kontakt",
+  };
+  let heroData = DEFAULT_HERO;
+  try { if (heroSetting) heroData = { ...DEFAULT_HERO, ...JSON.parse(heroSetting.value) }; } catch {}
 
   return (
     <SiteLayout currentPage="/dizajn-enterijera">
@@ -58,26 +77,21 @@ export default async function DizajnEnterijeraPage() {
             </nav>
 
             <span style={{
-              display: "inline-block", padding: "6px 14px",
-              background: "rgba(199,241,230,0.15)", border: "1px solid rgba(199,241,230,0.4)",
-              color: "#C7F1E6", fontSize: 13, fontWeight: 600,
-              borderRadius: 100, letterSpacing: "0.05em", marginBottom: 20,
-            }}>PROJEKTOVANJE I DIZAJN</span>
+              display: "inline-flex", alignItems: "center", gap: 7,
+              color: "#C7F1E6", fontSize: 11, fontWeight: 700,
+              letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20,
+            }}>{heroData.eyebrow}</span>
 
             <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#fff", lineHeight: 1.1, margin: "0 0 20px" }}>
-              Dizajn enterijera za <span style={{ color: "#0F766E" }}>retail i HoReCa</span> — od ideje do realizacije
+              {heroData.h1} <span style={{ color: "#0F766E" }}>{heroData.h1Highlight}</span>
             </h1>
 
             <p style={{ fontSize: "1.075rem", color: "rgba(255,255,255,0.82)", lineHeight: 1.7, maxWidth: 700, margin: 0 }}>
-              Uz isporuku i montažu opreme, kreiramo i kompletna dizajnerska rješenja prostora. Kroz saradnju sa renomiranim retail i HoReCa design studijima razvijamo funkcionalne i prepoznatljive enterijere — prilagođene identitetu brenda, budžetu i specifičnostima svakog projekta.
+              {heroData.lead}
             </p>
 
             <div style={{ display: "flex", gap: 40, marginTop: 36, paddingTop: 28, borderTop: "1px solid rgba(255,255,255,0.12)", flexWrap: "wrap" }}>
-              {[
-                { num: studios.length, label: "Partnerska studija" },
-                { num: totalProjects, label: "Idejnih koncepata" },
-                { num: "Na ključ", label: "Od ideje do otvaranja" },
-              ].map(s => (
+              {heroData.stats.map(s => (
                 <div key={s.label} style={{ display: "flex", flexDirection: "column" }}>
                   <span style={{ fontSize: "2.4rem", fontWeight: 800, color: "#0F766E", lineHeight: 1 }}>{s.num}</span>
                   <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 6 }}>{s.label}</span>
@@ -171,10 +185,10 @@ export default async function DizajnEnterijeraPage() {
       <section className="cta-section">
         <div className="container">
           <div className="design-cta">
-            <h3>Planirate novi objekat ili redizajn postojećeg?</h3>
-            <p>Spajamo dizajn enterijera, projektovanje i opremanje na ključ — jedan partner od ideje do otvaranja. Zatražite konsultaciju i idejni koncept za vaš prostor.</p>
-            <Link href="/kontakt" className="btn-primary">
-              Zatražite idejni koncept{" "}
+            <h3>{heroData.ctaH3}</h3>
+            <p>{heroData.ctaP}</p>
+            <Link href={heroData.ctaHref} className="btn-primary">
+              {heroData.ctaBtn}{" "}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
               </svg>

@@ -48,6 +48,7 @@ function AddProjectForm({ studioId, onAdded }: { studioId: string; onAdded: () =
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ caption: "", overlayLabel: "", image: "" });
   const [saving, setSaving] = useState(false);
+  const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", border: "1.5px solid #E2E8ED", borderRadius: 8, fontSize: 14, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box", color: "#111827", background: "#fff", display: "block" };
 
   async function handleAdd() {
     if (!form.image.trim() || !form.overlayLabel.trim()) return;
@@ -86,7 +87,30 @@ function AddProjectForm({ studioId, onAdded }: { studioId: string; onAdded: () =
   );
 }
 
+type HeroStat = { num: string; label: string };
+type DizajnHero = { eyebrow: string; h1: string; h1Highlight: string; lead: string; stats: HeroStat[]; ctaH3: string; ctaP: string; ctaBtn: string; ctaHref: string };
+
+const DEFAULT_HERO: DizajnHero = {
+  eyebrow: "PROJEKTOVANJE I DIZAJN",
+  h1: "Dizajn enterijera za",
+  h1Highlight: "retail i HoReCa — od ideje do realizacije",
+  lead: "Uz isporuku i montažu opreme, kreiramo i kompletna dizajnerska rješenja prostora. Kroz saradnju sa renomiranim retail i HoReCa design studijima razvijamo funkcionalne i prepoznatljive enterijere — prilagođene identitetu brenda, budžetu i specifičnostima svakog projekta.",
+  stats: [
+    { num: "2", label: "Partnerska studija" },
+    { num: "21", label: "Idejnih koncepata" },
+    { num: "Na ključ", label: "Od ideje do otvaranja" },
+  ],
+  ctaH3: "Planirate novi objekat ili redizajn postojećeg?",
+  ctaP: "Spajamo dizajn enterijera, projektovanje i opremanje na ključ — jedan partner od ideje do otvaranja. Zatražite konsultaciju i idejni koncept za vaš prostor.",
+  ctaBtn: "Zatražite idejni koncept",
+  ctaHref: "/kontakt",
+};
+
 export default function DizajnEnterijeraAdmin() {
+  const [tab, setTab] = useState<"hero" | "studiji">("hero");
+  const [hero, setHero] = useState<DizajnHero>(DEFAULT_HERO);
+  const [savingHero, setSavingHero] = useState(false);
+  const [savedHero, setSavedHero] = useState(false);
   const [studios, setStudios] = useState<Studio[]>([]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -98,6 +122,24 @@ export default function DizajnEnterijeraAdmin() {
   // Edit studio state
   const [editingStudio, setEditingStudio] = useState<Studio | null>(null);
   const [editForm, setEditForm] = useState({ badge: "", name: "", tag: "" });
+
+  useEffect(() => {
+    fetch("/api/settings").then(r => r.json()).then(s => {
+      try { setHero({ ...DEFAULT_HERO, ...JSON.parse(s.dizajn_hero) }); } catch {}
+    });
+  }, []);
+
+  async function saveHero() {
+    setSavingHero(true);
+    const res = await fetch("/api/settings", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dizajn_hero: JSON.stringify(hero) }),
+    });
+    setSavingHero(false);
+    if (res.status === 401) { window.location.href = "/admin/login"; return; }
+    if (!res.ok) { alert("Greška pri snimanju."); return; }
+    setSavedHero(true); setTimeout(() => setSavedHero(false), 3000);
+  }
 
   const load = useCallback(async () => {
     const res = await fetch("/api/design-studios-admin");
@@ -175,13 +217,81 @@ export default function DizajnEnterijeraAdmin() {
     await load();
   }
 
+  const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", border: "1.5px solid #E2E8ED", borderRadius: 8, fontSize: 14, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box", color: "#111827", background: "#fff", display: "block" };
+  const lbl: React.CSSProperties = { display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 };
+
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>Dizajn enterijera</h1>
-          <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Upravljanje design studijima i projektima · prevuci za promjenu redoslijeda</p>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0B1D33", margin: 0 }}>Dizajn enterijera</h1>
+        <p style={{ color: "#6B7B8A", fontSize: 14, marginTop: 4 }}>Hero sekcija stranice i upravljanje design studijima</p>
+      </div>
+
+      {/* Tabovi */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 28, background: "#fff", borderRadius: 10, padding: 4, border: "1px solid #E2E8ED", width: "fit-content" }}>
+        {([["hero", "🏠 Hero sekcija"], ["studiji", "🎨 Studiji & Projekti"]] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)} style={{ padding: "8px 18px", borderRadius: 7, border: "none", cursor: "pointer", fontFamily: "'Satoshi', sans-serif", fontSize: 13, fontWeight: tab === key ? 600 : 400, background: tab === key ? "#0F766E" : "transparent", color: tab === key ? "#fff" : "#6B7B8A" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── HERO TAB ── */}
+      {tab === "hero" && (
+        <div style={{ maxWidth: 800 }}>
+          {/* Naslov */}
+          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", marginBottom: 16, overflow: "hidden" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid #E2E8ED", background: "#F8FAFB", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <strong style={{ fontSize: 14, color: "#0B1D33" }}>Hero — Naslov i tekst</strong>
+              {savedHero && <span style={{ fontSize: 13, color: "#16A34A" }}>✓ Sačuvano</span>}
+            </div>
+            <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 14 }}>
+              <div><label style={lbl}>Eyebrow badge</label><input value={hero.eyebrow} onChange={e => setHero({ ...hero, eyebrow: e.target.value })} style={inp} /></div>
+              <div><label style={lbl}>H1 naslov (prvi dio)</label><input value={hero.h1} onChange={e => setHero({ ...hero, h1: e.target.value })} style={inp} /></div>
+              <div><label style={lbl}>H1 istaknuti dio (teal)</label><input value={hero.h1Highlight} onChange={e => setHero({ ...hero, h1Highlight: e.target.value })} style={inp} /></div>
+              <div><label style={lbl}>Lead tekst</label><textarea value={hero.lead} onChange={e => setHero({ ...hero, lead: e.target.value })} rows={4} style={{ ...inp, resize: "vertical" }} /></div>
+            </div>
+          </div>
+
+          {/* Statistike */}
+          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", marginBottom: 16, overflow: "hidden" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid #E2E8ED", background: "#F8FAFB" }}>
+              <strong style={{ fontSize: 14, color: "#0B1D33" }}>Hero — Statistike</strong>
+            </div>
+            <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 10 }}>
+              {hero.stats.map((s, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input placeholder="Broj" value={s.num} onChange={e => { const st = [...hero.stats]; st[i] = { ...st[i], num: e.target.value }; setHero({ ...hero, stats: st }); }} style={{ ...inp, width: 120 }} />
+                  <input placeholder="Labela" value={s.label} onChange={e => { const st = [...hero.stats]; st[i] = { ...st[i], label: e.target.value }; setHero({ ...hero, stats: st }); }} style={{ ...inp, flex: 1 }} />
+                  <button onClick={() => setHero({ ...hero, stats: hero.stats.filter((_, idx) => idx !== i) })} style={{ padding: "8px 10px", background: "#FEF2F2", color: "#DC2626", border: "none", borderRadius: 6, cursor: "pointer" }}>✕</button>
+                </div>
+              ))}
+              <button onClick={() => setHero({ ...hero, stats: [...hero.stats, { num: "", label: "" }] })} style={{ padding: "6px 14px", background: "#E6EEF2", color: "#374151", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 13, alignSelf: "flex-start" }}>+ Dodaj statistiku</button>
+            </div>
+          </div>
+
+          {/* CTA blok */}
+          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8ED", marginBottom: 20, overflow: "hidden" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid #E2E8ED", background: "#F8FAFB" }}>
+              <strong style={{ fontSize: 14, color: "#0B1D33" }}>Prefooter CTA blok</strong>
+            </div>
+            <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 14 }}>
+              <div><label style={lbl}>Naslov</label><input value={hero.ctaH3} onChange={e => setHero({ ...hero, ctaH3: e.target.value })} style={inp} /></div>
+              <div><label style={lbl}>Opis</label><textarea value={hero.ctaP} onChange={e => setHero({ ...hero, ctaP: e.target.value })} rows={2} style={{ ...inp, resize: "vertical" }} /></div>
+              <div><label style={lbl}>Dugme — tekst</label><input value={hero.ctaBtn} onChange={e => setHero({ ...hero, ctaBtn: e.target.value })} style={inp} /></div>
+              <div><label style={lbl}>Dugme — link</label><input value={hero.ctaHref} onChange={e => setHero({ ...hero, ctaHref: e.target.value })} style={inp} /></div>
+            </div>
+          </div>
+
+          <button onClick={saveHero} disabled={savingHero} style={{ padding: "11px 28px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'Satoshi', sans-serif" }}>
+            {savingHero ? "Čuvanje..." : "Sačuvaj hero sekciju"}
+          </button>
         </div>
+      )}
+
+      {/* ── STUDIJI TAB ── */}
+      {tab === "studiji" && <div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
         <button onClick={() => setShowNewStudio(s => !s)} style={{ padding: "11px 22px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'Satoshi', sans-serif" }}>
           + Novi partner / studio
         </button>
@@ -298,11 +408,10 @@ export default function DizajnEnterijeraAdmin() {
           </div>
         </div>
       ))}
+    </div>}
     </div>
   );
 }
 
-const lbl: React.CSSProperties = { display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 5 };
-const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", border: "1.5px solid #E2E8ED", borderRadius: 8, fontSize: 13, fontFamily: "'Satoshi', sans-serif", outline: "none", boxSizing: "border-box", color: "#111827", background: "#fff", display: "block" };
 const btnPrimary: React.CSSProperties = { flex: 1, padding: "9px 18px", background: "#0F766E", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Satoshi', sans-serif" };
 const btnGhost: React.CSSProperties = { padding: "9px 16px", border: "1.5px solid #E2E8ED", background: "#fff", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Satoshi', sans-serif" };
