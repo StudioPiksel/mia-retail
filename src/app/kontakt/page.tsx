@@ -21,7 +21,6 @@ export default function KontaktPage() {
             </nav>
           </div>
           <div className="solution-hero-content">
-            <span className="section-eyebrow" style={{ color: "var(--mint)", background: "rgba(255,255,255,0.1)" }}>Kontaktirajte nas</span>
             <h1>Razgovarajmo o<br /><em>vašem projektu</em></h1>
             <p className="hero-desc">Dostupni smo za sve upite — od prve konsultacije do isporuke i servisa.</p>
           </div>

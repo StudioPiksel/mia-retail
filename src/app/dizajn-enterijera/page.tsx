@@ -76,12 +76,6 @@ export default async function DizajnEnterijeraPage() {
               <span style={{ color: "rgba(255,255,255,0.45)" }}>Dizajn enterijera</span>
             </nav>
 
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              color: "#C7F1E6", fontSize: 11, fontWeight: 700,
-              letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20,
-            }}>{heroData.eyebrow}</span>
-
             <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#fff", lineHeight: 1.1, margin: "0 0 20px" }}>
               {heroData.h1} <span style={{ color: "#0F766E" }}>{heroData.h1Highlight}</span>
             </h1>

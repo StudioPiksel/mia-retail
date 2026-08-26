@@ -41,7 +41,6 @@ export default async function BlogPage({
             </nav>
           </div>
           <div className="solution-hero-content">
-            <span className="section-eyebrow" style={{ color: "var(--mint)", background: "rgba(255,255,255,0.1)" }}>Znanje iz prakse</span>
             <h1>MIA Insights: <br /><em>Vodiči i trendovi</em></h1>
             <p className="hero-desc">Kratki tekstovi iz naše svakodnevne prakse koji vam pomažu da bolje razumijete opremu, izbjegnete greške i optimizujete vaš objekat.</p>
           </div>

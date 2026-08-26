@@ -49,7 +49,6 @@ export default async function PomocUizboruPage() {
                 <Link href="/">Početna</Link> <span>/</span>{" "}
                 <span className="breadcrumb-current">Pomoć u izboru</span>
               </nav>
-              <span className="solution-hero-eyebrow">{hero.eyebrow}</span>
               <h1>{hero.h1} <span className="highlight">{hero.h1Highlight}</span></h1>
               <p className="solution-hero-lead">{hero.lead}</p>
               <div className="solution-hero-stats">

@@ -40,7 +40,6 @@ export default function ReferencePage() {
               <span className="sep"> / </span>
               <span style={{ color: "#fff" }}>Reference</span>
             </nav>
-            <span className="hero-eyebrow">REFERENCE</span>
             <h1>Naša rješenja u vodećim <span className="highlight">svjetskim trgovinama</span></h1>
             <p className="hero-desc">Oprema koju nudimo ugrađena je u objekte vodećih svjetskih maloprodajnih lanaca. Pogledajte realizacije naših provjerenih partnera — grupisane po brendu i tipu objekta.</p>
             <div className="reference-stats">

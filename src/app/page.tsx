@@ -183,7 +183,6 @@ export default async function HomePage() {
         <div className="hero-overlay"></div>
         <div className="hero-container">
           <div className="hero-content">
-            <p className="hero-eyebrow">{heroData.eyebrow}</p>
             <h1 className="hero-title">{heroData.h1} <span className="highlight">{heroData.h1Highlight}</span></h1>
             <p className="hero-subtitle">{heroData.subtitle}</p>
             <div className="hero-stats">

@@ -101,7 +101,6 @@ export default async function RjesenjaPage({ params }: { params: Promise<{ slug:
                   <Link href="#">Rješenja</Link> <span>/</span>{" "}
                   <span className="breadcrumb-current">{hero.h1} {hero.h1Highlight}</span>
                 </nav>
-                <span className="solution-hero-eyebrow">{hero.eyebrow}</span>
                 <h1>{hero.h1} <span className="highlight">{hero.h1Highlight}</span></h1>
                 <p className="solution-hero-lead">{hero.lead}</p>
                 <div className="solution-hero-stats">

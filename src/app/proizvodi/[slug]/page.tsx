@@ -297,7 +297,6 @@ export default async function ProizvodiPage({ params }: { params: Promise<{ slug
                 <Link href="#">Proizvodi</Link> <span>/</span>{" "}
                 <span className="breadcrumb-current">{category.name}</span>
               </nav>
-              <span className="solution-hero-eyebrow">{cfg?.eyebrow ?? "Proizvodi"}</span>
               <h1>
                 {cfg?.h1 ?? category.name}{" "}
                 {cfg?.highlight && <span className="highlight">{cfg.highlight}</span>}
