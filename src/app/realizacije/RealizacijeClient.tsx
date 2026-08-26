@@ -58,7 +58,6 @@ export default function RealizacijeClient({ items }: { items: Realizacija[] }) {
               <span style={{ color: "rgba(255,255,255,0.45)", margin: "0 8px" }}>/</span>
               <span style={{ color: "rgba(255,255,255,0.45)" }}>Realizacije</span>
             </nav>
-            <span style={{ display: "inline-block", padding: "6px 14px", background: "rgba(199,241,230,0.15)", border: "1px solid rgba(199,241,230,0.4)", color: "#C7F1E6", fontSize: 13, fontWeight: 600, borderRadius: 100, letterSpacing: "0.05em", marginBottom: 20 }}>REALIZACIJE</span>
             <h1 style={{ fontSize: "clamp(2rem, 6vw, 3.25rem)", fontWeight: 900, color: "#fff", lineHeight: 1.15, margin: "0 0 20px" }}>
               Naša rješenja u vodećim{" "}
               <span style={{ color: "#0F766E" }}>svjetskim trgovinama</span>
